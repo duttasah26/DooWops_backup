@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { FaSpotify, FaCheck, FaForward, FaUndo } from "react-icons/fa";
+import { FaCheck, FaForward, FaUndo } from "react-icons/fa";
 import WebPlayback from "./WebPlayback";
 import YouTubePlayer from "./YouTubePlayer";
 
@@ -179,7 +179,7 @@ export default function GamePage({
 
   const pickedCardStack = (pickedThisRound[1] || pickedThisRound[2]) && (
     <div
-      style={{ position: "fixed", top: 32, right: 32, zIndex: 999, minWidth: 260, maxWidth: 340 }}
+      style={{ position: "absolute", top: 0, right: 0, zIndex: 999, minWidth: 260, maxWidth: 340 }}
       className="flex flex-col items-end space-y-2"
     >
       {pickedThisRound[1] && <RoundPickedCard track={pickedThisRound[1]} name={player1} />}
@@ -194,32 +194,28 @@ export default function GamePage({
     || (!isFinalRound && pickedForRound && choiceIndex > 0);
 
   return (
-    <div className="min-h-screen w-screen relative bg-gradient-to-br from-purple-900 to-black text-white overflow-x-hidden flex flex-col items-center">
+    <div className="relative w-full flex flex-col items-center text-gray-900">
       {pickedCardStack}
-      <div className="absolute top-4 left-6 flex items-center gap-2 z-50">
-        <FaSpotify className="text-green-500 text-3xl" />
-        <h1 className="text-3xl font-bold">DooWops</h1>
-      </div>
-      <div className="flex items-center justify-center mt-20 mb-8">
+      <div className="flex items-center justify-center mt-2 mb-8">
         <div className="mr-8 text-lg font-bold">Round {currentRound}/{numRounds}</div>
-        <div className="text-md font-semibold bg-gray-800 rounded px-4 py-1">
+        <div className="text-md font-semibold bg-gray-800 text-white rounded px-4 py-1">
           {player1}: {picks[1]?.length}/{numRounds} &nbsp;|&nbsp; {player2}: {picks[2]?.length}/{numRounds}
         </div>
       </div>
       <div className="relative w-full flex flex-row items-start justify-center mb-6 max-w-6xl">
         {activePlayer === 1 && (
           <div className="absolute left-0 top-8 ml-8" style={{ minWidth: 160, zIndex: 10 }}>
-            <span className="text-3xl font-extrabold text-left text-purple-200 drop-shadow-md tracking-wide block" style={{ lineHeight: 1.18 }}>
+            <span className="text-3xl font-extrabold text-left text-retro-olive drop-shadow-sm tracking-wide block" style={{ lineHeight: 1.18 }}>
               {`${activeName},`}<br />
-              <span className="text-2xl font-bold text-white">it's your turn!</span>
+              <span className="text-2xl font-bold text-gray-900">it's your turn!</span>
             </span>
           </div>
         )}
         {activePlayer === 2 && (
           <div className="absolute right-0 top-8 mr-8" style={{ minWidth: 160, zIndex: 10 }}>
-            <span className="text-3xl font-extrabold text-right text-purple-200 drop-shadow-md tracking-wide block" style={{ lineHeight: 1.18 }}>
+            <span className="text-3xl font-extrabold text-right text-retro-olive drop-shadow-sm tracking-wide block" style={{ lineHeight: 1.18 }}>
               {`${activeName},`}<br />
-              <span className="text-2xl font-bold text-white">it's your turn!</span>
+              <span className="text-2xl font-bold text-gray-900">it's your turn!</span>
             </span>
           </div>
         )}

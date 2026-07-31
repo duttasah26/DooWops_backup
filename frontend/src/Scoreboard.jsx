@@ -192,8 +192,8 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-black text-white flex flex-col pb-52">
-      <div className="w-full max-w-6xl mx-auto flex flex-col items-center pt-12 pb-6">
+    <div className="w-full flex flex-col text-gray-900">
+      <div className="w-full max-w-6xl mx-auto flex flex-col items-center pt-2 pb-6 overflow-x-auto">
         <div className="flex items-end justify-center w-full gap-14 mb-14">
           {renderPlayerColumn(1, picks[1], player1, "#85f1e6")}
           <div
@@ -205,7 +205,7 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
       </div>
 
       {/* Player above scoreboard bar */}
-      <div className="w-full flex items-center justify-center py-3 fixed left-0 bottom-24 z-50 bg-zinc-950 bg-opacity-95 border-t border-zinc-700">
+      <div className="w-full flex items-center justify-center py-3 sticky bottom-16 z-40 bg-zinc-950 bg-opacity-95 border-t border-zinc-700">
         <div className="w-[400px]">
           {activeTrack ? (
             <>
@@ -252,7 +252,7 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
       </div>
 
       {/* Scoreboard bar */}
-      <div className="fixed bottom-0 left-0 w-full flex items-center justify-center py-4 bg-black z-50 border-t border-zinc-800">
+      <div className="sticky bottom-0 w-full flex items-center justify-center py-4 bg-black z-50 border-t border-zinc-800">
         <span className="mr-6">
           <span className="text-2xl font-extrabold" style={{ color: "#20e6b3" }}>{player1}</span>
           <span className="ml-2 text-3xl text-white font-black"> {score1}</span>

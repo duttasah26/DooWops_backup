@@ -121,21 +121,21 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 to-black px-2">
-      <div className="w-full max-w-2xl flex flex-col items-center py-8">
-        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-wide mb-5 text-center text-white">
+    <div className="w-full flex flex-col items-center px-2">
+      <div className="w-full max-w-2xl flex flex-col items-center py-2">
+        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-wide mb-5 text-center text-retro-olive">
           Start a 1v1
         </h2>
 
         {/* Mode Toggle */}
-        <div className="flex rounded-lg overflow-hidden border border-zinc-600 mb-7">
+        <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-7">
           <button
             type="button"
             onClick={() => setMode("spotify")}
             className={`flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
               mode === "spotify"
                 ? "bg-green-600 text-white"
-                : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
             }`}
           >
             <FaSpotify /> Spotify
@@ -146,7 +146,7 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
             className={`flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
               mode === "youtube"
                 ? "bg-red-700 text-white"
-                : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
             }`}
           >
             <FaYoutube /> YouTube
@@ -157,7 +157,7 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
         {mode === "spotify" && (
           <>
             {!token && (
-              <div className="mb-4 text-yellow-400 text-sm text-center">
+              <div className="mb-4 text-amber-700 text-sm text-center">
                 Spotify mode requires login.{" "}
                 <a href="/auth/login" className="underline">Log in with Spotify</a>
               </div>
@@ -220,7 +220,7 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
                   onChange={e => setCustomPlaylist(e.target.value)}
                   autoFocus
                 />
-                <span className="text-xs text-gray-400">Paste the playlist URL or ID</span>
+                <span className="text-xs text-gray-500">Paste the playlist URL or ID</span>
               </div>
             )}
           </>
@@ -237,7 +237,7 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
               onChange={e => setYtPlaylistInput(e.target.value)}
               autoFocus
             />
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-500">
               e.g. https://www.youtube.com/playlist?list=PL... or just the playlist ID
             </span>
           </div>
@@ -249,33 +249,33 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
             value={player1}
             onChange={e => setPlayer1(e.target.value)}
             placeholder="Player 1 name"
-            className="p-3 rounded-lg text-black text-lg flex-1 outline-none min-w-0"
+            className="p-3 rounded-lg text-black text-lg flex-1 outline-none min-w-0 border border-gray-300"
             autoComplete="off"
           />
-          <span className="mx-1 font-bold text-white text-2xl">vs</span>
+          <span className="mx-1 font-bold text-retro-olive text-2xl">vs</span>
           <input
             value={player2}
             onChange={e => setPlayer2(e.target.value)}
             placeholder="Player 2 name"
-            className="p-3 rounded-lg text-black text-lg flex-1 outline-none min-w-0"
+            className="p-3 rounded-lg text-black text-lg flex-1 outline-none min-w-0 border border-gray-300"
             autoComplete="off"
           />
         </div>
 
         {/* Rounds */}
         <div className="mb-2 w-full flex flex-row items-center justify-center">
-          <label className="text-white font-semibold">
+          <label className="text-gray-800 font-semibold">
             Rounds:
             <input
               type="number"
-              className="ml-2 w-16 p-2 rounded text-black font-bold text-lg border border-zinc-400"
+              className="ml-2 w-16 p-2 rounded text-black font-bold text-lg border border-gray-400"
               min={2}
               max={10}
               value={numRounds}
               onChange={e => setNumRounds(Number(e.target.value))}
             />
           </label>
-          <span className="text-xs ml-3 text-gray-400">(Last round: 5 songs!)</span>
+          <span className="text-xs ml-3 text-gray-500">(Last round: 5 songs!)</span>
         </div>
 
         <button

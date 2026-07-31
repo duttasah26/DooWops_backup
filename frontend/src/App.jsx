@@ -1,27 +1,12 @@
 import { useState, useEffect } from "react";
+import { ghostCursor } from "cursor-effects";
 import GamePage from "./GamePage";
 import LoginPage from "./LoginPage";
 import Lobby from "./Lobby";
 import Scoreboard from "./Scoreboard";
-import Particles from "react-tsparticles";
-import { loadSlim } from "tsparticles-slim";
-import { FaSpotify } from "react-icons/fa";
-import "./App.css";
+import RetroShell from "./components/RetroShell";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-
-const PARTICLES_OPTIONS = {
-  background: { color: "transparent" },
-  fpsLimit: 60,
-  particles: {
-    color: { value: "#ffffff" },
-    links: { enable: true, color: "#ffffff", distance: 150, opacity: 0.2, width: 1 },
-    move: { enable: true, speed: 0.5 },
-    number: { value: 40 },
-    opacity: { value: 0.3 },
-    size: { value: { min: 1, max: 3 } },
-  },
-};
 
 export default function App() {
   const [token, setToken] = useState("");
@@ -78,15 +63,18 @@ export default function App() {
     verify();
   }, [token]);
 
+  useEffect(() => {
+    const cursorEffect = new ghostCursor();
+    return () => cursorEffect.destroy();
+  }, []);
+
+  const handleGoHome = () => setPhase("lobby");
+
   // YouTube mode bypasses Spotify auth entirely
   if (youtubeMode) {
     if (phase === "lobby") {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 to-black text-white flex flex-col items-center justify-center">
-          <div className="absolute top-4 left-6 flex items-center gap-2 z-50">
-            <FaSpotify className="text-green-500 text-3xl" />
-            <h1 className="text-3xl font-bold">DooWops</h1>
-          </div>
+        <RetroShell onGoHome={handleGoHome}>
           <Lobby
             token={null}
             initialMode="youtube"
@@ -96,72 +84,68 @@ export default function App() {
               setPhase("game");
             }}
           />
-        </div>
+        </RetroShell>
       );
     }
     if (phase === "game") {
       return (
-        <GamePage
-          token={null}
-          playlistId={gameSettings.playlistId}
-          player1={gameSettings.player1}
-          player2={gameSettings.player2}
-          numRounds={gameSettings.numRounds}
-          mode="youtube"
-          setTokenError={() => {}}
-          onGameEnd={({ picks }) => {
-            setFinalPicks(picks);
-            setPhase("scoreboard");
-          }}
-        />
+        <RetroShell onGoHome={handleGoHome}>
+          <GamePage
+            token={null}
+            playlistId={gameSettings.playlistId}
+            player1={gameSettings.player1}
+            player2={gameSettings.player2}
+            numRounds={gameSettings.numRounds}
+            mode="youtube"
+            setTokenError={() => {}}
+            onGameEnd={({ picks }) => {
+              setFinalPicks(picks);
+              setPhase("scoreboard");
+            }}
+          />
+        </RetroShell>
       );
     }
     if (phase === "scoreboard") {
       return (
-        <Scoreboard
-          player1={gameSettings.player1}
-          player2={gameSettings.player2}
-          picks={finalPicks}
-          token={null}
-          mode="youtube"
-        />
+        <RetroShell onGoHome={handleGoHome}>
+          <Scoreboard
+            player1={gameSettings.player1}
+            player2={gameSettings.player2}
+            picks={finalPicks}
+            token={null}
+            mode="youtube"
+          />
+        </RetroShell>
       );
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 to-black text-white">
-        <Particles id="tsparticles" init={loadSlim} options={PARTICLES_OPTIONS} />
-        <div className="absolute top-4 left-6 flex items-center gap-2 z-50">
-          <FaSpotify className="text-green-500 text-3xl" />
-          <h1 className="text-3xl font-bold">DooWops</h1>
-        </div>
-        <h2 className="text-xl mt-24">Connecting to Spotify...</h2>
-      </div>
+      <RetroShell onGoHome={handleGoHome}>
+        <h2 className="text-xl mt-4 text-center">Connecting to Spotify...</h2>
+      </RetroShell>
     );
   }
 
   if (!token || tokenError) {
     return (
-      <LoginPage
-        error={tokenError ? "Spotify session expired. Please log in again." : undefined}
-        onYouTubeMode={() => {
-          setYoutubeMode(true);
-          setLoading(false);
-        }}
-      />
+      <RetroShell onGoHome={handleGoHome}>
+        <LoginPage
+          error={tokenError ? "Spotify session expired. Please log in again." : undefined}
+          onYouTubeMode={() => {
+            setYoutubeMode(true);
+            setLoading(false);
+          }}
+        />
+      </RetroShell>
     );
   }
 
   if (phase === "lobby") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 to-black text-white flex flex-col items-center justify-center">
-        <Particles id="tsparticles" init={loadSlim} options={PARTICLES_OPTIONS} />
-        <div className="absolute top-4 left-6 flex items-center gap-2 z-50">
-          <FaSpotify className="text-green-500 text-3xl" />
-          <h1 className="text-3xl font-bold">DooWops</h1>
-        </div>
+      <RetroShell onGoHome={handleGoHome}>
         <Lobby
           token={token}
           initialMode="spotify"
@@ -171,37 +155,41 @@ export default function App() {
             setPhase("game");
           }}
         />
-      </div>
+      </RetroShell>
     );
   }
 
   if (phase === "game") {
     return (
-      <GamePage
-        token={token}
-        playlistId={gameSettings.playlistId}
-        player1={gameSettings.player1}
-        player2={gameSettings.player2}
-        numRounds={gameSettings.numRounds}
-        mode={gameSettings.mode || "spotify"}
-        setTokenError={setTokenError}
-        onGameEnd={({ picks }) => {
-          setFinalPicks(picks);
-          setPhase("scoreboard");
-        }}
-      />
+      <RetroShell onGoHome={handleGoHome}>
+        <GamePage
+          token={token}
+          playlistId={gameSettings.playlistId}
+          player1={gameSettings.player1}
+          player2={gameSettings.player2}
+          numRounds={gameSettings.numRounds}
+          mode={gameSettings.mode || "spotify"}
+          setTokenError={setTokenError}
+          onGameEnd={({ picks }) => {
+            setFinalPicks(picks);
+            setPhase("scoreboard");
+          }}
+        />
+      </RetroShell>
     );
   }
 
   if (phase === "scoreboard") {
     return (
-      <Scoreboard
-        player1={gameSettings.player1}
-        player2={gameSettings.player2}
-        picks={finalPicks}
-        token={token}
-        mode={gameSettings.mode || "spotify"}
-      />
+      <RetroShell onGoHome={handleGoHome}>
+        <Scoreboard
+          player1={gameSettings.player1}
+          player2={gameSettings.player2}
+          picks={finalPicks}
+          token={token}
+          mode={gameSettings.mode || "spotify"}
+        />
+      </RetroShell>
     );
   }
 

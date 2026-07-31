@@ -139,7 +139,7 @@ const WebPlayback = ({ token, trackUri, onReady, previewUrl }) => {
       </div>
 
       {/* Volume - Bottom Right */}
-      <div className="fixed bottom-4 right-6 flex items-center gap-2 bg-black/40 p-2 rounded-md z-50">
+      <div className="absolute bottom-4 right-6 flex items-center gap-2 bg-black/40 p-2 rounded-md z-50">
         <FaVolumeUp />
         <input
           type="range"
