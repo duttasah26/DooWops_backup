@@ -104,7 +104,7 @@ const WebPlayback = ({ token, trackUri, onReady, previewUrl }) => {
         ) : (
           <>
             <audio ref={audioRef} className="hidden" />
-            <p className="text-lg font-semibold">🔌 Connect to Spotify</p>
+            <p className="text-lg font-semibold">Connect to Spotify</p>
             <p className="text-sm text-gray-400">Open the app and select "Doowops Player".</p>
           </>
         )}

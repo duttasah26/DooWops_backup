@@ -39,3 +39,34 @@ marquee {
 .seamless-marquee-track {
   animation: seamless-scroll 30s linear infinite;
 }
+
+.retro-btn {
+  border-radius: 3px;
+  border-top: 2px solid rgba(255, 255, 255, 0.55);
+  border-left: 2px solid rgba(255, 255, 255, 0.55);
+  border-right: 2px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+}
+
+.retro-btn:active:not(:disabled) {
+  border-top-color: rgba(0, 0, 0, 0.4);
+  border-left-color: rgba(0, 0, 0, 0.4);
+  border-right-color: rgba(255, 255, 255, 0.55);
+  border-bottom-color: rgba(255, 255, 255, 0.55);
+  transform: translateY(1px);
+}
+
+.retro-btn:disabled {
+  filter: grayscale(40%);
+}
+
+:root {
+  --bg-video-zoom: 1.06;
+  --bg-video-x: 0px;
+  --bg-video-y: 0px;
+}
+
+.bg-video {
+  transform: scale(var(--bg-video-zoom)) translate(var(--bg-video-x), var(--bg-video-y));
+  transform-origin: center;
+}

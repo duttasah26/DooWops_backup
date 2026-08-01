@@ -177,10 +177,10 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
             </div>
             <button
               onClick={e => { e.stopPropagation(); togglePick(playerNum, i); }}
-              className={`ml-4 px-0 py-2 rounded-lg font-bold text-lg border transition-all h-10 flex items-center justify-center
+              className={`retro-btn ml-4 px-0 py-2 font-bold text-lg transition-all h-10 flex items-center justify-center
                 ${selected[playerNum].has(i)
-                  ? "bg-green-500 text-white border-green-400"
-                  : "bg-zinc-800 text-green-300 border-green-400 hover:bg-green-600 hover:text-white"}`}
+                  ? "bg-green-500 text-white"
+                  : "bg-zinc-800 text-green-300 hover:bg-green-600 hover:text-white"}`}
               style={{ minWidth: 80, width: 80, fontWeight: 700 }}
             >
               {selected[playerNum].has(i) ? "Picked" : "Pick"}
@@ -224,7 +224,7 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
                       <button
                         onClick={retryDeviceActivation}
                         disabled={activating}
-                        className={`px-4 py-2 my-2 rounded font-bold transition ${
+                        className={`retro-btn px-4 py-2 my-2 font-bold transition ${
                           activating
                             ? "bg-gray-600 text-gray-300 cursor-not-allowed"
                             : "bg-green-700 text-white hover:bg-green-800"

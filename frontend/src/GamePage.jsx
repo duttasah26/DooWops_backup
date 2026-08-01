@@ -286,8 +286,8 @@ export default function GamePage({
                   onClick={handleNextTurnOrRound}
                   className={
                     activePlayer === 1
-                      ? "bg-blue-500 px-4 py-2 rounded text-white font-bold shadow hover:bg-blue-600 transition"
-                      : "bg-green-600 px-4 py-2 rounded text-white font-bold shadow hover:bg-green-800 transition"
+                      ? "retro-btn bg-blue-500 px-4 py-2 text-white font-bold shadow hover:bg-blue-600 transition"
+                      : "retro-btn bg-green-600 px-4 py-2 text-white font-bold shadow hover:bg-green-800 transition"
                   }
                 >
                   {activePlayer === 1

@@ -123,16 +123,16 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
   return (
     <div className="w-full flex flex-col items-center px-2">
       <div className="w-full max-w-2xl flex flex-col items-center py-2">
-        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-wide mb-5 text-center text-retro-olive">
+        <h2 className="text-3xl sm:text-4xl font-gothic mb-5 text-center text-retro-olive">
           Start a 1v1
         </h2>
 
         {/* Mode Toggle */}
-        <div className="flex rounded-lg overflow-hidden border border-gray-300 mb-7">
+        <div className="flex gap-2 mb-7">
           <button
             type="button"
             onClick={() => setMode("spotify")}
-            className={`flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
+            className={`retro-btn flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
               mode === "spotify"
                 ? "bg-green-600 text-white"
                 : "bg-gray-100 text-gray-500 hover:bg-gray-200"
@@ -143,7 +143,7 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
           <button
             type="button"
             onClick={() => setMode("youtube")}
-            className={`flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
+            className={`retro-btn flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
               mode === "youtube"
                 ? "bg-red-700 text-white"
                 : "bg-gray-100 text-gray-500 hover:bg-gray-200"
@@ -279,7 +279,7 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
         </div>
 
         <button
-          className={`mt-4 w-full text-center py-3 rounded-xl font-bold text-xl shadow transition ${
+          className={`retro-btn mt-4 w-full text-center py-3 font-bold text-xl shadow transition ${
             mode === "youtube" ? "bg-red-700 hover:bg-red-800" : "bg-green-600 hover:bg-green-700"
           } ${!canStart ? "opacity-60 cursor-not-allowed" : ""} text-white`}
           onClick={handleStart}

@@ -22,6 +22,7 @@ export default {
       fontFamily: {
         gothic: ["'Century Gothic'", "'Apple Gothic'", "'URW Gothic'", "sans-serif"],
         display: ["'Retro Display'", "'Century Gothic'", "sans-serif"],
+        segoe: ["'Segoe UI'", "sans-serif"],
       },
       maxWidth: {
         retro: "1000px",
