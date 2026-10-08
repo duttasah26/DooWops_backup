@@ -13,7 +13,9 @@
 }
 
 body {
-  font-family: 'Century Gothic', 'Apple Gothic', 'URW Gothic', sans-serif;
+  font-family: Verdana, Tahoma, Geneva, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
 }
 
 @font-face {
@@ -40,25 +42,169 @@ marquee {
   animation: seamless-scroll 30s linear infinite;
 }
 
-.retro-btn {
-  border-radius: 3px;
-  border-top: 2px solid rgba(255, 255, 255, 0.55);
-  border-left: 2px solid rgba(255, 255, 255, 0.55);
-  border-right: 2px solid rgba(0, 0, 0, 0.4);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.4);
+/* ------------------------------------------------------------------
+   2007-2010 "web 2.0" kit, structure after soph.gay/home: glossy panels
+   with a white top-half sheen, 8px corners, soft drop shadows, headings
+   sitting above the panels. Colours are doo-wops' own: light silver
+   panels on the white page from DESIGN/image.png, lime for main actions.
+   ------------------------------------------------------------------ */
+
+:root {
+  --gloss: linear-gradient(rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 50%);
+  --panel: linear-gradient(#ffffff 0%, #f0f2ea 50%, #e2e6d6 100%);
+  --dark: linear-gradient(#3c3f3a 0%, #262823 50%, #141512 100%);
+  --lime: linear-gradient(#cfe86c 0%, #b5d333 50%, #98b81c 100%);
+  --red: linear-gradient(#ec5b52 0%, #d0261d 50%, #a8170f 100%);
+  --panel-shadow: 0 3px 8px rgba(0,0,0,.18), inset 0 1px 0 #fff;
+  --heading: #6f8a1e;
+  --link: #2a61d1;
 }
 
-.retro-btn:active:not(:disabled) {
-  border-top-color: rgba(0, 0, 0, 0.4);
-  border-left-color: rgba(0, 0, 0, 0.4);
-  border-right-color: rgba(255, 255, 255, 0.55);
-  border-bottom-color: rgba(255, 255, 255, 0.55);
-  transform: translateY(1px);
+/* panels */
+.box, .win, .fs {
+  background: var(--gloss), var(--panel);
+  color: #1a1a1a;
+  border: 1px solid #c3c9b4;
+  border-radius: 8px;
+  box-shadow: var(--panel-shadow);
+  text-shadow: 0 1px 0 rgba(255,255,255,.7);
+}
+.box { padding: 14px 16px; }
+.win { overflow: hidden; }
+.win-title {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 12px 0;
+  font: bold 15px Verdana, Tahoma, sans-serif;
+  color: #1a1a1a;
+}
+.win-body { padding: 8px 12px 12px; }
+.win-video { background: #000; line-height: 0; margin: 8px 12px 12px; border: 1px solid #9aa08c; }
+.win-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
+.box a:not(.btn), .win a:not(.btn), .fs a:not(.btn) { color: var(--link); text-decoration: underline; }
+.box a:not(.btn):hover, .win a:not(.btn):hover, .fs a:not(.btn):hover { color: #1a0dab; }
+.box .small, .win .small, .fs .small { color: #555; }
+
+/* section heading above a panel, like soph's "update log" */
+.h-era {
+  font: bold 21px Verdana, Tahoma, sans-serif;
+  color: #0d0d0d;
+  margin: 0 0 6px;
+  text-shadow: none;
 }
 
-.retro-btn:disabled {
-  filter: grayscale(40%);
+/* buttons: small glossy dark pills; lime for the main action */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font: 14px Arial, Tahoma, sans-serif;
+  line-height: 17px;
+  padding: 6px 16px;
+  color: #1a1a1a;
+  background: var(--gloss), linear-gradient(#ffffff 0%, #e9ebe4 50%, #d0d4c6 100%);
+  border: 1px solid #a3a996;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2), inset 0 1px 0 #fff;
+  text-shadow: 0 1px 0 rgba(255,255,255,.8);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
 }
+.btn:hover { filter: brightness(1.05); }
+.btn:active:not(:disabled) { box-shadow: inset 0 2px 4px rgba(0,0,0,.25); transform: translateY(1px); }
+.btn:focus-visible { outline: 2px solid #b5d333; outline-offset: 2px; }
+.btn:disabled { opacity: .45; cursor: default; filter: grayscale(.5); }
+.btn-lime { background: var(--gloss), var(--lime); border-color: #86a316; color: #1d2a12; font-weight: bold; text-shadow: 0 1px 0 rgba(255,255,255,.45); }
+.btn-red { background: var(--gloss), var(--red); border-color: #8f130c; color: #fff; font-weight: bold; text-shadow: 0 1px 1px rgba(0,0,0,.45); }
+.btn-big { font-size: 16px; line-height: 20px; padding: 9px 24px; border-radius: 8px; }
+.btn.is-on { box-shadow: inset 0 2px 4px rgba(0,0,0,.25); }
+
+/* forms */
+.fs { padding: 12px 16px 14px; margin: 0; }
+.fs legend { float: left; width: 100%; padding: 0; margin-bottom: 8px; font: bold 16px Verdana, Tahoma, sans-serif; color: #1a1a1a; }
+.fs legend + * { clear: both; }
+.txt {
+  font: 15px Tahoma, Verdana, sans-serif;
+  padding: 5px 8px;
+  border: 1px solid #a3a996;
+  border-radius: 4px;
+  background: #fff;
+  color: #000;
+  text-shadow: none;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.25);
+}
+.txt:focus { outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,.25), 0 0 0 2px #b5d333; }
+
+/* tables inside panels */
+.tbl { border-collapse: collapse; width: 100%; }
+.tbl td, .tbl th { padding: 6px 8px; text-align: left; vertical-align: middle; border-bottom: 1px dotted rgba(0,0,0,.18); }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl th { font-weight: bold; }
+.tbl tr.on td { background: rgba(181,211,51,.35); }
+.tbl tr.cursor-pointer:hover td { background: rgba(0,0,0,.04); }
+
+.small { font-size: 13px; color: #555; }
+.lnk { color: #2a61d1; text-decoration: underline; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; }
+
+/* sidebar nav, like soph's: links as pills inside a panel */
+.navbox { padding: 8px; }
+.navbox .nav-head { font: bold 14px Tahoma, sans-serif; color: #b5d333; padding: 6px 10px 2px; }
+.navbox a, .navbox button, .navbox span.navlink {
+  display: block; width: 100%; text-align: left;
+  padding: 5px 10px; border-radius: 6px;
+  font: 15px Verdana, Tahoma, sans-serif; color: #fff;
+  background: none; border: 0; text-decoration: none; cursor: pointer;
+}
+.navbox a:hover, .navbox button:hover { background: rgba(255,255,255,.14); text-decoration: none; }
+.navbox span.navlink { color: #9a9d94; cursor: default; }
+
+/* top nav (game mode) */
+.topnav {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 2px;
+  margin: 0; padding: 5px 8px;
+  background: var(--gloss), var(--dark);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 2px 4px rgba(0,0,0,.25);
+}
+.topnav > li { position: relative; list-style: none; }
+.topnav > li > button,
+.topnav > li > a {
+  display: block; padding: 4px 12px; border-radius: 6px;
+  font: 15px Verdana, Tahoma, sans-serif; color: #fff;
+  text-shadow: 0 1px 1px rgba(0,0,0,.5);
+  background: none; border: 0; cursor: pointer; text-decoration: none;
+}
+.topnav > li:hover > button,
+.topnav > li.open > button,
+.topnav > li > a:hover { background: rgba(255,255,255,.14); }
+.topnav ul {
+  display: none; position: absolute; left: 0; top: calc(100% + 5px); z-index: 50;
+  min-width: 170px; margin: 0; padding: 6px;
+  background: var(--gloss), var(--dark);
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(0,0,0,.45);
+}
+.topnav > li:hover > ul,
+.topnav > li.open > ul { display: block; }
+.topnav ul li { list-style: none; }
+.topnav ul li > * {
+  display: block; width: 100%; text-align: left; padding: 5px 10px; border-radius: 6px;
+  font: 14px Verdana, Tahoma, sans-serif; color: #fff;
+  text-shadow: 0 1px 1px rgba(0,0,0,.5);
+  background: none; border: 0; cursor: pointer;
+}
+.topnav ul li > span { color: #9a9d94; cursor: default; }
+.topnav ul li > button:hover { background: rgba(255,255,255,.14); }
+.topnav .topnav-right { margin-left: auto; }
+.topnav .topnav-right span { display: block; padding: 4px 10px; color: #b5d333; font: bold 14px Tahoma, sans-serif; }
+
+/* sidebar / footer links, image.png style */
+.side-link { color: #2a61d1; text-decoration: underline; cursor: pointer; background: none; border: 0; padding: 0; font: inherit; }
+.side-link:hover { color: #1a0dab; }
+span.side-link { cursor: default; }
+
+/* ad and button walls */
+.btnwall { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.btnwall img { width: 150px; height: 20px; image-rendering: pixelated; display: block; }
+.stamps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.stamps img { width: 100%; height: auto; image-rendering: pixelated; display: block; }
 
 :root {
   --bg-video-zoom: 1.06;

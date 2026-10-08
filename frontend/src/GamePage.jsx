@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { FaCheck, FaForward, FaUndo } from "react-icons/fa";
 import WebPlayback from "./WebPlayback";
 import YouTubePlayer from "./YouTubePlayer";
+import TurnView from "./TurnView";
+import { trackTitle } from "./trackTitle";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -60,7 +61,6 @@ export default function GamePage({
   const [choicesLoading, setChoicesLoading] = useState(true);
   const [choiceIndex, setChoiceIndex] = useState(0);
   const [picks, setPicks] = useState({ 1: [], 2: [] });
-  const [pickedThisRound, setPickedThisRound] = useState({ 1: null, 2: null });
   const [pickedForRound, setPickedForRound] = useState(null);
   const [goBackUsed, setGoBackUsed] = useState({ 1: false, 2: false });
   const [deviceId, setDeviceId] = useState(null);
@@ -90,12 +90,6 @@ export default function GamePage({
   }, [currentRound, activePlayer, playlistId, numRounds, setTokenError, mode]);
 
   useEffect(() => {
-    if (activePlayer === 1) {
-      setPickedThisRound({ 1: null, 2: null });
-    }
-  }, [currentRound]);
-
-  useEffect(() => {
     setPickedForRound(null);
   }, [activePlayer]);
 
@@ -122,7 +116,6 @@ export default function GamePage({
   function handlePick() {
     const pick = choices[choiceIndex];
     setPickedForRound(pick);
-    setPickedThisRound(prev => ({ ...prev, [activePlayer]: pick }));
     setPicks(ps => ({ ...ps, [activePlayer]: [...ps[activePlayer], pick] }));
   }
 
@@ -152,155 +145,71 @@ export default function GamePage({
     }
   }
 
-  function RoundPickedCard({ track, name }) {
-    if (!track) return null;
-    return (
-      <div
-        className="flex flex-row items-center bg-black bg-opacity-95 rounded-xl shadow-md px-3 py-2 mb-2"
-        style={{ minWidth: 260, maxWidth: 320 }}
-      >
-        <img
-          src={
-            track.album.images[1]?.url ??
-            track.album.images[0]?.url ??
-            "https://misc.scdn.co/liked-songs/liked-songs-300.png"
-          }
-          className="rounded-md shadow w-12 h-12 object-cover mr-3"
-          alt="picked card cover"
-        />
-        <div>
-          <div className="font-semibold text-base text-white truncate">{track.name}</div>
-          <div className="text-xs text-purple-200 truncate">{track.artists.map(a => a.name).join(", ")}</div>
-          <div className="text-xs text-[#3eeb65] font-bold mt-1">{name}'s pick</div>
-        </div>
-      </div>
-    );
-  }
-
-  const pickedCardStack = (pickedThisRound[1] || pickedThisRound[2]) && (
-    <div
-      style={{ position: "absolute", top: 0, right: 0, zIndex: 999, minWidth: 260, maxWidth: 340 }}
-      className="flex flex-col items-end space-y-2"
-    >
-      {pickedThisRound[1] && <RoundPickedCard track={pickedThisRound[1]} name={player1} />}
-      {pickedThisRound[2] && <RoundPickedCard track={pickedThisRound[2]} name={player2} />}
-    </div>
-  );
-
   const isFinalRound = currentRound === numRounds;
   const goBackUsedAlready = goBackUsed[activePlayer] === true;
   const showGoBackBtn =
     (isFinalRound && choiceIndex > 0 && !goBackUsedAlready)
     || (!isFinalRound && pickedForRound && choiceIndex > 0);
 
-  return (
-    <div className="relative w-full flex flex-col items-center text-gray-900">
-      {pickedCardStack}
-      <div className="flex items-center justify-center mt-2 mb-8">
-        <div className="mr-8 text-lg font-bold">Round {currentRound}/{numRounds}</div>
-        <div className="text-md font-semibold bg-gray-800 text-white rounded px-4 py-1">
-          {player1}: {picks[1]?.length}/{numRounds} &nbsp;|&nbsp; {player2}: {picks[2]?.length}/{numRounds}
-        </div>
-      </div>
-      <div className="relative w-full flex flex-row items-start justify-center mb-6 max-w-6xl">
-        {activePlayer === 1 && (
-          <div className="absolute left-0 top-8 ml-8" style={{ minWidth: 160, zIndex: 10 }}>
-            <span className="text-3xl font-extrabold text-left text-retro-olive drop-shadow-sm tracking-wide block" style={{ lineHeight: 1.18 }}>
-              {`${activeName},`}<br />
-              <span className="text-2xl font-bold text-gray-900">it's your turn!</span>
-            </span>
-          </div>
-        )}
-        {activePlayer === 2 && (
-          <div className="absolute right-0 top-8 mr-8" style={{ minWidth: 160, zIndex: 10 }}>
-            <span className="text-3xl font-extrabold text-right text-retro-olive drop-shadow-sm tracking-wide block" style={{ lineHeight: 1.18 }}>
-              {`${activeName},`}<br />
-              <span className="text-2xl font-bold text-gray-900">it's your turn!</span>
-            </span>
-          </div>
-        )}
+  const nextLabel = activePlayer === 1
+    ? `${player2}'s turn`
+    : isFinalRound
+    ? "Finish and see scores"
+    : "Next round";
 
-        <div className="flex-1 flex flex-col items-center">
-          <div className="mx-auto">
-            <div className="bg-zinc-900 rounded-lg p-6 shadow-xl w-80 flex flex-col items-center relative" style={{ minHeight: 420 }}>
-              {(choicesLoading && !displayTrack) ? (
-                <div className="flex items-center justify-center h-64 w-full text-lg text-gray-400">Loading…</div>
-              ) : (
-                <>
-                  {displayTrack && (
-                    <>
-                      <img src={displayTrack.album.images[0]?.url} alt="cover" className="rounded w-64" />
-                      <h2 className="text-xl font-semibold mt-2 text-center">{displayTrack.name}</h2>
-                      <p className="text-sm text-gray-300 text-center">
-                        {displayTrack.artists.map(a => a.name).join(", ")}
-                      </p>
-                      <p className="text-center text-xs text-purple-300 mt-2">
-                        Track {choiceIndex + 1}/{choices.length}
-                        {currentRound === numRounds && (
-                          <span className="ml-2 text-yellow-400">Final round: 5 choices</span>
-                        )}
-                      </p>
-                    </>
-                  )}
-                </>
-              )}
-              <div className="w-full flex items-center justify-center mt-4">
-                {mode === "youtube" ? (
-                  <YouTubePlayer videoId={displayTrack?.youtube_video_id} />
-                ) : (
-                  <WebPlayback
-                    token={token}
-                    trackUri={lastValidTrackUri || undefined}
-                    onReady={setDeviceId}
-                    previewUrl={displayTrack?.preview_url}
-                  />
-                )}
-              </div>
-              <div className="flex justify-between items-center mt-6 w-full px-6">
-                {showGoBackBtn && (
-                  <button onClick={handleGoBack} className="text-yellow-400 text-2xl" title="Go Back">
-                    <FaUndo />
-                  </button>
-                )}
-                <button
-                  disabled={!!pickedForRound || choicesLoading}
-                  onClick={handlePick}
-                  className="text-green-400 text-2xl hover:scale-110 transition-all"
-                  title="Pick Song"
-                >
-                  <FaCheck />
-                </button>
-                <button
-                  disabled={!displayTrack || choiceIndex >= choices.length - 1 || choicesLoading}
-                  onClick={handleNext}
-                  className="text-red-400 text-2xl hover:scale-110 transition-all"
-                  title="Next Song"
-                >
-                  <FaForward />
-                </button>
-              </div>
-            </div>
-            {pickedForRound && (
-              <div className="flex gap-4 my-3">
-                <button
-                  onClick={handleNextTurnOrRound}
-                  className={
-                    activePlayer === 1
-                      ? "retro-btn bg-blue-500 px-4 py-2 text-white font-bold shadow hover:bg-blue-600 transition"
-                      : "retro-btn bg-green-600 px-4 py-2 text-white font-bold shadow hover:bg-green-800 transition"
-                  }
-                >
-                  {activePlayer === 1
-                    ? "P2 TURN"
-                    : currentRound === numRounds
-                    ? "FINISH & SCOREBOARD"
-                    : "NEXT ROUND"}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+  const title = trackTitle(displayTrack);
+  const media = mode === "youtube" ? (
+    <YouTubePlayer videoId={displayTrack?.youtube_video_id} title={title} />
+  ) : (
+    <div className="win">
+      <div className="win-title"><span className="truncate">{title}</span></div>
+      <div className="win-video flex items-center justify-center" style={{ aspectRatio: "16 / 9" }}>
+        {displayTrack?.album?.images?.[0]?.url ? (
+          <img src={displayTrack.album.images[0].url} alt="" className="h-full aspect-square object-cover" />
+        ) : (
+          <span className="text-gray-400" style={{ lineHeight: "normal" }}>
+            {choicesLoading ? "loading songs..." : "no song loaded"}
+          </span>
+        )}
+      </div>
+      <div className="win-body">
+        <WebPlayback
+          token={token}
+          trackUri={lastValidTrackUri || undefined}
+          onReady={setDeviceId}
+          previewUrl={displayTrack?.preview_url}
+        />
       </div>
     </div>
+  );
+
+  return (
+    <TurnView
+      heading={`${activeName}, it's your turn!`}
+      round={currentRound}
+      numRounds={numRounds}
+      media={media}
+      status={
+        choicesLoading && !displayTrack
+          ? "loading songs..."
+          : displayTrack
+          ? `song ${choiceIndex + 1} of ${choices.length}`
+          : "no songs found in this playlist"
+      }
+      player1={player1}
+      player2={player2}
+      picked1={picks[1]?.length}
+      picked2={picks[2]?.length}
+      picked={pickedForRound}
+      canPick={!pickedForRound && !choicesLoading && !!displayTrack}
+      canNext={!!displayTrack && choiceIndex < choices.length - 1 && !choicesLoading}
+      canBack={!!showGoBackBtn}
+      backLabel={isFinalRound ? "Go back (once)" : "Go back"}
+      nextLabel={nextLabel}
+      onPick={handlePick}
+      onNext={handleNext}
+      onBack={handleGoBack}
+      onAdvance={handleNextTurnOrRound}
+    />
   );
 }

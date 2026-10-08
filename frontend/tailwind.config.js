@@ -25,7 +25,7 @@ export default {
         segoe: ["'Segoe UI'", "sans-serif"],
       },
       maxWidth: {
-        retro: "1000px",
+        retro: "1100px",
       },
     },
   },

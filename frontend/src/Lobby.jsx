@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FaSpotify, FaYoutube, FaPlus } from "react-icons/fa";
+import usePageTitle from "./usePageTitle";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
 const HARDCODED_PLAYLISTS = [
   {
@@ -54,6 +57,7 @@ async function fetchPlaylistCover(playlistId, token) {
 }
 
 export default function Lobby({ onStart, token, initialMode = "spotify" }) {
+  usePageTitle("start a 1v1");
   const [mode, setMode] = useState(initialMode);
 
   // Spotify mode state
@@ -120,173 +124,172 @@ export default function Lobby({ onStart, token, initialMode = "spotify" }) {
     }
   }
 
+  const customSelected = customInputOpen;
+  const pickSpotify = id => { setCustomInputOpen(false); setChosenId(id); };
+
   return (
-    <div className="w-full flex flex-col items-center px-2">
-      <div className="w-full max-w-2xl flex flex-col items-center py-2">
-        <h2 className="text-3xl sm:text-4xl font-gothic mb-5 text-center text-retro-olive">
-          Start a 1v1
-        </h2>
+    <div>
+      <h2 className="h-era">start a 1v1</h2>
 
-        {/* Mode Toggle */}
-        <div className="flex gap-2 mb-7">
-          <button
-            type="button"
-            onClick={() => setMode("spotify")}
-            className={`retro-btn flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
-              mode === "spotify"
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-            }`}
-          >
-            <FaSpotify /> Spotify
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("youtube")}
-            className={`retro-btn flex items-center gap-2 px-5 py-2 font-bold transition text-sm ${
-              mode === "youtube"
-                ? "bg-red-700 text-white"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-            }`}
-          >
-            <FaYoutube /> YouTube
-          </button>
-        </div>
-
-        {/* Spotify playlist picker */}
-        {mode === "spotify" && (
-          <>
-            {!token && (
-              <div className="mb-4 text-amber-700 text-sm text-center">
-                Spotify mode requires login.{" "}
-                <a href="/auth/login" className="underline">Log in with Spotify</a>
-              </div>
-            )}
-            <div className="flex flex-wrap justify-center gap-5 w-full mb-7">
-              {HARDCODED_PLAYLISTS.map(p => (
-                <button
-                  type="button"
-                  key={p.id}
-                  onClick={() => { setCustomInputOpen(false); setChosenId(p.id); }}
-                  className={`flex flex-col items-center rounded-lg border-2 bg-black hover:bg-zinc-900 px-2 py-3 transition-all focus:outline-none
-                    ${!customInputOpen && chosenId === p.id ? "border-green-400 ring-2 ring-green-200" : "border-zinc-700"}`}
-                  style={{
-                    width: 132, minHeight: 178,
-                    boxShadow: (!customInputOpen && chosenId === p.id) ? "0 0 0 3px #27efb055" : "none"
-                  }}
-                >
-                  <div className="rounded-lg mb-2 overflow-hidden" style={{ width: 92, height: 92, background: "#171726" }}>
-                    {playlistCovers[p.id] ? (
-                      <img src={playlistCovers[p.id]} alt={p.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full w-full text-3xl text-purple-400">
-                        <FaSpotify />
-                      </div>
-                    )}
-                  </div>
-                  <span className="font-bold text-base text-white text-center">{p.name}</span>
-                  <a
-                    className="text-blue-400 text-xs underline mt-1"
-                    rel="noreferrer"
-                    target="_blank"
-                    href={p.url}
-                    onClick={e => e.stopPropagation()}
-                    tabIndex={-1}
-                  >
-                    View
-                  </a>
-                </button>
-              ))}
+      <div className="grid gap-3 md:grid-cols-2 items-start">
+        <div className="flex flex-col gap-3">
+          <fieldset className="fs">
+            <legend>1. music source</legend>
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setCustomInputOpen(true)}
-                className={`flex flex-col items-center rounded-lg border-2 bg-black px-2 py-3 hover:bg-zinc-900 focus:outline-none transition-all
-                  ${customInputOpen ? "border-green-400 ring-2 ring-green-200" : "border-zinc-700"}`}
-                style={{ width: 132, minHeight: 178 }}
+                onClick={() => setMode("spotify")}
+                className={`btn ${mode === "spotify" ? "btn-lime is-on" : ""}`}
+                aria-pressed={mode === "spotify"}
               >
-                <div className="rounded-lg flex justify-center items-center mb-2" style={{ width: 92, height: 92, background: "#181820" }}>
-                  <FaPlus className={`text-4xl ${customInputOpen ? "text-green-400" : "text-zinc-400"}`} />
-                </div>
-                <span className="font-bold text-base text-white">Custom Playlist</span>
+                <FaSpotify /> Spotify
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("youtube")}
+                className={`btn ${mode === "youtube" ? "btn-red is-on" : ""}`}
+                aria-pressed={mode === "youtube"}
+              >
+                <FaYoutube /> YouTube
               </button>
             </div>
-            {customInputOpen && (
-              <div className="w-full flex flex-col gap-2 items-center mb-3">
+          </fieldset>
+
+          <fieldset className="fs">
+            <legend>2. playlist</legend>
+
+            {mode === "spotify" && (
+              <>
+                {!token && (
+                  <p className="mb-2">
+                    Spotify mode needs a login. <a href={`${BACKEND_URL}/auth/login`}>Log in with Spotify</a>
+                  </p>
+                )}
+                <table className="tbl">
+                  <tbody>
+                    {HARDCODED_PLAYLISTS.map(p => {
+                      const on = !customSelected && chosenId === p.id;
+                      return (
+                        <tr key={p.id} className={`cursor-pointer ${on ? "on" : ""}`} onClick={() => pickSpotify(p.id)}>
+                          <td className="w-7">
+                            <input type="radio" name="playlist" checked={on} onChange={() => pickSpotify(p.id)} aria-label={p.name} />
+                          </td>
+                          <td className="w-14">
+                            {playlistCovers[p.id] ? (
+                              <img src={playlistCovers[p.id]} alt="" className="w-11 h-11 object-cover rounded block" />
+                            ) : (
+                              <div className="w-11 h-11 rounded bg-white border border-[#c3c9b4] flex items-center justify-center text-retro-green text-xl">
+                                <FaSpotify />
+                              </div>
+                            )}
+                          </td>
+                          <td className="font-bold">{p.name}</td>
+                          <td className="text-right">
+                            <a rel="noreferrer" target="_blank" href={p.url} onClick={e => e.stopPropagation()}>view</a>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr className={`cursor-pointer ${customSelected ? "on" : ""}`} onClick={() => setCustomInputOpen(true)}>
+                      <td>
+                        <input type="radio" name="playlist" checked={customSelected} onChange={() => setCustomInputOpen(true)} aria-label="Custom playlist" />
+                      </td>
+                      <td>
+                        <div className="w-11 h-11 rounded bg-white border border-[#c3c9b4] flex items-center justify-center text-xl">
+                          <FaPlus />
+                        </div>
+                      </td>
+                      <td colSpan={2} className="font-bold">custom playlist</td>
+                    </tr>
+                  </tbody>
+                </table>
+                {customSelected && (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      className="txt w-full"
+                      placeholder="Spotify playlist URL or ID"
+                      value={customPlaylist}
+                      onChange={e => setCustomPlaylist(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+            {mode === "youtube" && (
+              <div>
                 <input
                   type="text"
-                  className="rounded px-3 py-2 text-black w-full max-w-xs text-base border border-green-500"
-                  placeholder="Spotify Playlist URL or ID"
-                  value={customPlaylist}
-                  onChange={e => setCustomPlaylist(e.target.value)}
+                  className="txt w-full"
+                  placeholder="YouTube playlist URL or ID"
+                  value={ytPlaylistInput}
+                  onChange={e => setYtPlaylistInput(e.target.value)}
                   autoFocus
                 />
-                <span className="text-xs text-gray-500">Paste the playlist URL or ID</span>
+                <div className="small mt-1">
+                  e.g. https://www.youtube.com/playlist?list=PL... or just the playlist ID
+                </div>
               </div>
             )}
-          </>
-        )}
+          </fieldset>
+        </div>
 
-        {/* YouTube playlist input */}
-        {mode === "youtube" && (
-          <div className="w-full flex flex-col gap-2 items-center mb-7">
-            <input
-              type="text"
-              className="rounded px-3 py-2 text-black w-full max-w-sm text-base border border-red-500"
-              placeholder="YouTube Playlist URL or ID"
-              value={ytPlaylistInput}
-              onChange={e => setYtPlaylistInput(e.target.value)}
-              autoFocus
-            />
-            <span className="text-xs text-gray-500">
-              e.g. https://www.youtube.com/playlist?list=PL... or just the playlist ID
-            </span>
+        <div className="flex flex-col gap-3">
+          <fieldset className="fs">
+            <legend>3. players</legend>
+            <div className="flex flex-col gap-2">
+              <input
+                value={player1}
+                onChange={e => setPlayer1(e.target.value)}
+                placeholder="Player 1 name"
+                aria-label="Player 1 name"
+                className="txt w-full"
+                autoComplete="off"
+              />
+              <div className="font-bold text-retro-olive text-center">vs</div>
+              <input
+                value={player2}
+                onChange={e => setPlayer2(e.target.value)}
+                placeholder="Player 2 name"
+                aria-label="Player 2 name"
+                className="txt w-full"
+                autoComplete="off"
+              />
+            </div>
+          </fieldset>
+
+          <fieldset className="fs">
+            <legend>4. rounds</legend>
+            <label className="flex items-center gap-2">
+              <input
+                type="number"
+                className="txt w-20"
+                min={2}
+                max={10}
+                value={numRounds}
+                onChange={e => setNumRounds(Number(e.target.value))}
+                aria-label="Number of rounds"
+              />
+              <span>rounds (the last round has 5 songs)</span>
+            </label>
+          </fieldset>
+
+          <div className="box">
+            <button type="button" className="btn btn-lime btn-big w-full" onClick={handleStart} disabled={!canStart}>
+              Start Game
+            </button>
+            {!canStart && (
+              <div className="small mt-2 text-center">pick a playlist, enter both names and at least 2 rounds</div>
+            )}
           </div>
-        )}
 
-        {/* Player Names */}
-        <div className="flex gap-3 items-center w-full mb-4">
-          <input
-            value={player1}
-            onChange={e => setPlayer1(e.target.value)}
-            placeholder="Player 1 name"
-            className="p-3 rounded-lg text-black text-lg flex-1 outline-none min-w-0 border border-gray-300"
-            autoComplete="off"
-          />
-          <span className="mx-1 font-bold text-retro-olive text-2xl">vs</span>
-          <input
-            value={player2}
-            onChange={e => setPlayer2(e.target.value)}
-            placeholder="Player 2 name"
-            className="p-3 rounded-lg text-black text-lg flex-1 outline-none min-w-0 border border-gray-300"
-            autoComplete="off"
-          />
+          <div className="box">
+            <div className="font-bold mb-1">how to play</div>
+            <div>Each round, both players get 3 songs to listen through and pick one. At the end, play everything back and give a point to every pick you liked.</div>
+          </div>
         </div>
-
-        {/* Rounds */}
-        <div className="mb-2 w-full flex flex-row items-center justify-center">
-          <label className="text-gray-800 font-semibold">
-            Rounds:
-            <input
-              type="number"
-              className="ml-2 w-16 p-2 rounded text-black font-bold text-lg border border-gray-400"
-              min={2}
-              max={10}
-              value={numRounds}
-              onChange={e => setNumRounds(Number(e.target.value))}
-            />
-          </label>
-          <span className="text-xs ml-3 text-gray-500">(Last round: 5 songs!)</span>
-        </div>
-
-        <button
-          className={`retro-btn mt-4 w-full text-center py-3 font-bold text-xl shadow transition ${
-            mode === "youtube" ? "bg-red-700 hover:bg-red-800" : "bg-green-600 hover:bg-green-700"
-          } ${!canStart ? "opacity-60 cursor-not-allowed" : ""} text-white`}
-          onClick={handleStart}
-          disabled={!canStart}
-        >
-          Start Game
-        </button>
       </div>
     </div>
   );

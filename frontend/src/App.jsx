@@ -1,20 +1,31 @@
 import { useState, useEffect } from "react";
-import { ghostCursor } from "cursor-effects";
 import GamePage from "./GamePage";
 import LoginPage from "./LoginPage";
 import Lobby from "./Lobby";
 import Scoreboard from "./Scoreboard";
 import RetroShell from "./components/RetroShell";
+import OnlineRoom from "./OnlineRoom";
+import usePageTitle from "./usePageTitle";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+function roomFromUrl() {
+  try {
+    return new URL(window.location.href).searchParams.get("room") || "";
+  } catch {
+    return "";
+  }
+}
 
 export default function App() {
   const [token, setToken] = useState("");
   const [tokenError, setTokenError] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [youtubeMode, setYoutubeMode] = useState(false);
 
-  const [phase, setPhase] = useState("lobby");
+  // home (landing page) -> lobby (local setup) -> game -> scoreboard, or online rooms
+  const [roomCode] = useState(roomFromUrl);
+  const [phase, setPhase] = useState(() => (roomFromUrl() ? "online" : "home"));
+  const [lobbyMode, setLobbyMode] = useState("youtube");
   const [gameSettings, setGameSettings] = useState(null);
   const [finalPicks, setFinalPicks] = useState(null);
 
@@ -63,92 +74,25 @@ export default function App() {
     verify();
   }, [token]);
 
-  useEffect(() => {
-    const cursorEffect = new ghostCursor();
-    return () => cursorEffect.destroy();
-  }, []);
+  const spotifyReady = !!token && !tokenError;
+  usePageTitle(phase === "home" && loading ? "connecting to Spotify" : null);
+  const goHome = () => setPhase("home");
+  const openLobby = mode => {
+    setLobbyMode(mode);
+    setPhase("lobby");
+  };
 
-  const handleGoHome = () => setPhase("lobby");
-
-  // YouTube mode bypasses Spotify auth entirely
-  if (youtubeMode) {
-    if (phase === "lobby") {
-      return (
-        <RetroShell onGoHome={handleGoHome}>
-          <Lobby
-            token={null}
-            initialMode="youtube"
-            onStart={settings => {
-              setGameSettings(settings);
-              setFinalPicks(null);
-              setPhase("game");
-            }}
-          />
-        </RetroShell>
-      );
-    }
-    if (phase === "game") {
-      return (
-        <RetroShell onGoHome={handleGoHome}>
-          <GamePage
-            token={null}
-            playlistId={gameSettings.playlistId}
-            player1={gameSettings.player1}
-            player2={gameSettings.player2}
-            numRounds={gameSettings.numRounds}
-            mode="youtube"
-            setTokenError={() => {}}
-            onGameEnd={({ picks }) => {
-              setFinalPicks(picks);
-              setPhase("scoreboard");
-            }}
-          />
-        </RetroShell>
-      );
-    }
-    if (phase === "scoreboard") {
-      return (
-        <RetroShell onGoHome={handleGoHome}>
-          <Scoreboard
-            player1={gameSettings.player1}
-            player2={gameSettings.player2}
-            picks={finalPicks}
-            token={null}
-            mode="youtube"
-          />
-        </RetroShell>
-      );
-    }
-  }
-
-  if (loading) {
-    return (
-      <RetroShell onGoHome={handleGoHome}>
-        <h2 className="text-xl mt-4 text-center">Connecting to Spotify...</h2>
-      </RetroShell>
-    );
-  }
-
-  if (!token || tokenError) {
-    return (
-      <RetroShell onGoHome={handleGoHome}>
-        <LoginPage
-          error={tokenError ? "Spotify session expired. Please log in again." : undefined}
-          onYouTubeMode={() => {
-            setYoutubeMode(true);
-            setLoading(false);
-          }}
-        />
-      </RetroShell>
-    );
+  if (phase === "online") {
+    return <OnlineRoom initialCode={roomCode} onGoHome={goHome} />;
   }
 
   if (phase === "lobby") {
     return (
-      <RetroShell onGoHome={handleGoHome}>
+      <RetroShell onGoHome={goHome}>
         <Lobby
-          token={token}
-          initialMode="spotify"
+          key={lobbyMode}
+          token={spotifyReady ? token : null}
+          initialMode={lobbyMode}
           onStart={settings => {
             setGameSettings(settings);
             setFinalPicks(null);
@@ -160,16 +104,17 @@ export default function App() {
   }
 
   if (phase === "game") {
+    const mode = gameSettings.mode || "spotify";
     return (
-      <RetroShell onGoHome={handleGoHome}>
+      <RetroShell onGoHome={goHome} variant="game" status={`${gameSettings.player1} vs ${gameSettings.player2}`}>
         <GamePage
-          token={token}
+          token={mode === "spotify" ? token : null}
           playlistId={gameSettings.playlistId}
           player1={gameSettings.player1}
           player2={gameSettings.player2}
           numRounds={gameSettings.numRounds}
-          mode={gameSettings.mode || "spotify"}
-          setTokenError={setTokenError}
+          mode={mode}
+          setTokenError={mode === "spotify" ? setTokenError : () => {}}
           onGameEnd={({ picks }) => {
             setFinalPicks(picks);
             setPhase("scoreboard");
@@ -180,18 +125,34 @@ export default function App() {
   }
 
   if (phase === "scoreboard") {
+    const mode = gameSettings.mode || "spotify";
     return (
-      <RetroShell onGoHome={handleGoHome}>
+      <RetroShell onGoHome={goHome} variant="game" status="final scores">
         <Scoreboard
           player1={gameSettings.player1}
           player2={gameSettings.player2}
           picks={finalPicks}
-          token={token}
-          mode={gameSettings.mode || "spotify"}
+          token={mode === "spotify" ? token : null}
+          mode={mode}
+          onPlayAgain={() => setPhase("lobby")}
         />
       </RetroShell>
     );
   }
 
-  return null;
+  return (
+    <RetroShell onGoHome={goHome}>
+      {loading ? (
+        <p className="mt-4 text-center font-bold">Connecting to Spotify...</p>
+      ) : (
+        <LoginPage
+          spotifyReady={spotifyReady}
+          error={tokenError ? "Spotify session expired. Please log in again." : undefined}
+          onSpotify={() => openLobby("spotify")}
+          onYouTubeMode={() => openLobby("youtube")}
+          onOnline={() => setPhase("online")}
+        />
+      )}
+    </RetroShell>
+  );
 }

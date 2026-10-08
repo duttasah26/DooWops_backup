@@ -99,13 +99,13 @@ const WebPlayback = ({ token, trackUri, onReady, previewUrl }) => {
         {previewUrl ? (
           <>
             <audio ref={audioRef} controls className="w-full mb-2" />
-            <p className="text-xs text-gray-400">30s preview — Spotify Premium required for full track</p>
+            <p className="small">30s preview. Spotify Premium is required for the full track.</p>
           </>
         ) : (
           <>
             <audio ref={audioRef} className="hidden" />
             <p className="text-lg font-semibold">Connect to Spotify</p>
-            <p className="text-sm text-gray-400">Open the app and select "Doowops Player".</p>
+            <p className="small">Open the app and select "Doowops Player".</p>
           </>
         )}
       </div>
@@ -116,23 +116,23 @@ const WebPlayback = ({ token, trackUri, onReady, previewUrl }) => {
     <div className="space-y-4 relative w-full">
       {/* Seek Bar */}
       <div className="flex items-center gap-2">
-        <span className="text-sm w-12 text-right">{formatTime(position)}</span>
+        <span className="w-14 text-right">{formatTime(position)}</span>
         <input
           type="range"
           min="0"
           max="100"
           value={(position / duration) * 100}
           onChange={handleSeek}
-          className="w-full accent-pink-500"
+          className="w-full accent-lime-500"
         />
-        <span className="text-sm w-12">{formatTime(duration)}</span>
+        <span className="w-14">{formatTime(duration)}</span>
       </div>
 
       {/* Play/Pause Button */}
       <div className="flex justify-center">
         <button
           onClick={() => player.togglePlay()}
-          className="p-3 bg-green-600 text-white rounded-full text-xl hover:scale-110 transition-transform"
+          className="btn btn-lime btn-big"
         >
           {isPaused ? <FaPlay /> : <FaPause />}
         </button>

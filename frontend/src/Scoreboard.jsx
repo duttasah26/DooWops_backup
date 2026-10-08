@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import WebPlayback from "./WebPlayback";
 import YouTubePlayer from "./YouTubePlayer";
+import usePageTitle from "./usePageTitle";
 
 async function activateBrowserDevice(deviceId, token, maxRetries = 15) {
   if (!deviceId || !token) return false;
@@ -67,9 +68,30 @@ async function playTrackSafely(deviceId, token, trackUri, maxRetries = 8) {
   return false;
 }
 
-export default function Scoreboard({ player1, player2, picks, token, mode = "spotify" }) {
-  const [selected, setSelected] = useState({ 1: new Set(), 2: new Set() });
-  const [activeTrack, setActiveTrack] = useState(null);
+// Voting is local by default. Online rooms pass `votes` + `onVote` so the
+// server holds the points, and `canVote={false}` for everyone but the host.
+// `playingTrack` + `onPlay` do the same for the song being played back, so the
+// guest's player follows whatever the host clicks.
+export default function Scoreboard({
+  player1,
+  player2,
+  picks,
+  token,
+  mode = "spotify",
+  onPlayAgain,
+  playAgainLabel = "Play again",
+  votes,
+  onVote,
+  canVote = true,
+  note,
+  playingTrack,
+  onPlay,
+}) {
+  usePageTitle("final scores");
+  const [localVotes, setLocalVotes] = useState({ 1: new Set(), 2: new Set() });
+  const selected = votes || localVotes;
+  const [localTrack, setActiveTrack] = useState(null);
+  const activeTrack = onPlay ? playingTrack : localTrack;
   const [webplayDeviceId, setWebplayDeviceId] = useState(null);
   const [playerReady, setPlayerReady] = useState(false);
   const [activating, setActivating] = useState(false);
@@ -88,7 +110,11 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
   }, [webplayDeviceId, token, mode]);
 
   function togglePick(playerNum, idx) {
-    setSelected(sel => {
+    if (onVote) {
+      onVote(playerNum, idx);
+      return;
+    }
+    setLocalVotes(sel => {
       const next = { 1: new Set(sel[1]), 2: new Set(sel[2]) };
       if (next[playerNum].has(idx)) next[playerNum].delete(idx);
       else next[playerNum].add(idx);
@@ -96,7 +122,11 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
     });
   }
 
-  async function handleCardClick(track) {
+  async function handleCardClick(track, playerNum, index) {
+    if (onPlay) {
+      if (canVote) onPlay(playerNum, index);
+      return;
+    }
     setActiveTrack(track);
     if (mode === "youtube") return; // YouTubePlayer renders automatically from activeTrack
 
@@ -125,143 +155,129 @@ export default function Scoreboard({ player1, player2, picks, token, mode = "spo
   const score1 = selected[1].size;
   const score2 = selected[2].size;
 
-  function renderPlayerColumn(playerNum, picksArr, playerName, accentColor) {
+  function renderPlayerColumn(playerNum, picksArr, playerName) {
+    const pts = selected[playerNum].size;
     return (
-      <div className="flex-1 flex flex-col items-center min-w-[340px] max-w-xl">
-        <h2
-          className="text-[2rem] font-extrabold uppercase mb-6 tracking-wider"
-          style={{ color: accentColor, lineHeight: 1.1, letterSpacing: "0.09em" }}
-        >
-          {playerName}
-        </h2>
-        {picksArr.map((track, i) => (
-          <div
-            key={i}
-            className={`flex items-center relative w-full mb-7 rounded-xl border-2 select-none cursor-pointer transition-all
-              ${selected[playerNum].has(i)
-                ? "border-green-400 bg-black"
-                : "border-zinc-700 bg-black hover:border-purple-400"
-              }`}
-            style={{ minHeight: 128, maxHeight: 128, minWidth: 320, maxWidth: 520, padding: "18px 20px", boxSizing: "border-box" }}
-            onClick={e => {
-              if (e.target.closest("button")) return;
-              handleCardClick(track);
-            }}
-          >
-            <img
-              src={track.album.images[1]?.url || track.album.images[0]?.url || ""}
-              className="rounded-lg w-20 h-20 object-cover mr-6 border border-zinc-800 flex-shrink-0"
-              alt="cover"
-              draggable={false}
-            />
-            <div className="flex-1 flex flex-col overflow-x-auto min-w-0">
-              <div className="font-extrabold text-2xl mb-1 text-white leading-snug truncate">
-                {track.name}
-              </div>
-              <div className="text-base font-semibold text-gray-300 truncate">
-                {track.artists.map(a => a.name).join(", ")}
-              </div>
-              <div className="flex items-center gap-2 mt-2 min-h-[22px]">
-                <span
-                  className="text-green-400 font-bold text-base"
-                  style={{ visibility: activeTrack?.uri === track.uri ? "visible" : "hidden" }}
-                >Now Playing</span>
-                <span
-                  className="text-green-300 text-base font-bold"
-                  style={{ visibility: selected[playerNum].has(i) ? "visible" : "hidden" }}
-                >+1</span>
-                {mode === "spotify" && !track.preview_url && (
-                  <span className="text-xs text-zinc-500">No preview</span>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={e => { e.stopPropagation(); togglePick(playerNum, i); }}
-              className={`retro-btn ml-4 px-0 py-2 font-bold text-lg transition-all h-10 flex items-center justify-center
-                ${selected[playerNum].has(i)
-                  ? "bg-green-500 text-white"
-                  : "bg-zinc-800 text-green-300 hover:bg-green-600 hover:text-white"}`}
-              style={{ minWidth: 80, width: 80, fontWeight: 700 }}
-            >
-              {selected[playerNum].has(i) ? "Picked" : "Pick"}
-            </button>
-          </div>
-        ))}
+      <div className="flex-1 min-w-0">
+        <h3 className="h-era !text-[20px]">{playerName}'s picks ({pts} {pts === 1 ? "point" : "points"})</h3>
+        <div className="box !p-2">
+          <table className="tbl">
+            <tbody>
+              {picksArr.map((track, i) => {
+                const playing = activeTrack?.uri === track.uri;
+                const on = selected[playerNum].has(i);
+                return (
+                  <tr
+                    key={i}
+                    className={`${!onPlay || canVote ? "cursor-pointer" : ""} ${on ? "on" : ""}`}
+                    onClick={e => {
+                      if (e.target.closest("button")) return;
+                      handleCardClick(track, playerNum, i);
+                    }}
+                    title={!onPlay || canVote ? "Click to play" : undefined}
+                  >
+                    <td className="w-14">
+                      <img
+                        src={track.album.images[1]?.url || track.album.images[0]?.url || ""}
+                        className="w-11 h-11 object-cover rounded block"
+                        alt=""
+                        draggable={false}
+                      />
+                    </td>
+                    <td className="max-w-0 w-full">
+                      <div className="font-bold truncate">{track.name}</div>
+                      <div className="small truncate">
+                        {playing ? "now playing" : track.artists.map(a => a.name).join(", ")}
+                        {mode === "spotify" && !track.preview_url && ", no preview"}
+                      </div>
+                    </td>
+                    <td className="w-[88px] text-right">
+                      {canVote ? (
+                        <button
+                          type="button"
+                          onClick={e => { e.stopPropagation(); togglePick(playerNum, i); }}
+                          className={`btn ${on ? "btn-lime is-on" : ""}`}
+                          aria-pressed={on}
+                        >
+                          {on ? "+1 given" : "+1"}
+                        </button>
+                      ) : (
+                        on && <span className="font-bold text-retro-olive">+1</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   }
 
+  const winner = score1 === score2 ? null : score1 > score2 ? player1 : player2;
+  const activeTitle = activeTrack
+    ? `${activeTrack.name} - ${activeTrack.artists.map(a => a.name).join(", ")}`
+    : "click a song below to play it";
+
   return (
-    <div className="w-full flex flex-col text-gray-900">
-      <div className="w-full max-w-6xl mx-auto flex flex-col items-center pt-2 pb-6 overflow-x-auto">
-        <div className="flex items-end justify-center w-full gap-14 mb-14">
-          {renderPlayerColumn(1, picks[1], player1, "#85f1e6")}
-          <div
-            className="text-[2.4rem] font-extrabold leading-normal mx-6 select-none px-7 py-2"
-            style={{ color: "#cac8ff", letterSpacing: ".09em" }}
-          >VS</div>
-          {renderPlayerColumn(2, picks[2], player2, "#7eefff")}
-        </div>
+    <div className="w-full flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+        <h2 className="h-era !mb-0">final scores</h2>
+        <span className="font-bold">
+          {player1} {score1} &nbsp;|&nbsp; {player2} {score2}
+        </span>
       </div>
 
-      {/* Player above scoreboard bar */}
-      <div className="w-full flex items-center justify-center py-3 sticky bottom-16 z-40 bg-zinc-950 bg-opacity-95 border-t border-zinc-700">
-        <div className="w-[400px]">
-          {activeTrack ? (
-            <>
-              {mode === "youtube" ? (
-                <YouTubePlayer videoId={activeTrack.youtube_video_id} />
-              ) : (
-                <>
-                  <WebPlayback
-                    token={token}
-                    trackUri={activeTrack.uri}
-                    onReady={setWebplayDeviceId}
-                    previewUrl={activeTrack?.preview_url}
-                  />
-                  {(!playerReady || activating) && (
-                    <div className="pt-2 text-center">
-                      <button
-                        onClick={retryDeviceActivation}
-                        disabled={activating}
-                        className={`retro-btn px-4 py-2 my-2 font-bold transition ${
-                          activating
-                            ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                            : "bg-green-700 text-white hover:bg-green-800"
-                        }`}
-                        type="button"
-                      >
-                        {activating ? "Activating..." : "Activate Spotify Player"}
-                      </button>
-                      <div className="text-xs text-zinc-400 mt-1">
-                        {activating
-                          ? "Connecting to Spotify..."
-                          : "If this doesn't work, open Spotify app and select 'Doowops Player' from devices."}
-                      </div>
+      {mode === "youtube" ? (
+        <YouTubePlayer videoId={activeTrack?.youtube_video_id} title={activeTitle} />
+      ) : (
+        <div className="win">
+          <div className="win-title"><span className="truncate">{activeTitle}</span></div>
+          <div className="win-body">
+            {activeTrack ? (
+              <>
+                <WebPlayback
+                  token={token}
+                  trackUri={activeTrack.uri}
+                  onReady={setWebplayDeviceId}
+                  previewUrl={activeTrack?.preview_url}
+                />
+                {(!playerReady || activating) && (
+                  <div className="pt-2 text-center">
+                    <button onClick={retryDeviceActivation} disabled={activating} className="btn btn-lime" type="button">
+                      {activating ? "Activating..." : "Activate Spotify Player"}
+                    </button>
+                    <div className="small mt-1">
+                      {activating
+                        ? "Connecting to Spotify..."
+                        : "If this doesn't work, open the Spotify app and select 'Doowops Player' from devices."}
                     </div>
-                  )}
-                </>
-              )}
-            </>
-          ) : (
-            <div className="text-center text-xl text-zinc-400 py-3 font-semibold">
-              Click any card to play it here!
-            </div>
-          )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="py-8 text-center">nothing playing yet</div>
+            )}
+          </div>
         </div>
+      )}
+
+      <div className="box flex flex-wrap items-center justify-between gap-3">
+        <span className="font-bold text-[20px]">
+          {winner ? `${winner} is winning!` : score1 === 0 ? "No points given yet." : "It's a tie!"}
+        </span>
+        <span>{note || "Click a song to play it, then give a +1 to every pick you liked."}</span>
+        {onPlayAgain && (
+          <button type="button" onClick={onPlayAgain} className="btn btn-big btn-lime">
+            {playAgainLabel}
+          </button>
+        )}
       </div>
 
-      {/* Scoreboard bar */}
-      <div className="sticky bottom-0 w-full flex items-center justify-center py-4 bg-black z-50 border-t border-zinc-800">
-        <span className="mr-6">
-          <span className="text-2xl font-extrabold" style={{ color: "#20e6b3" }}>{player1}</span>
-          <span className="ml-2 text-3xl text-white font-black"> {score1}</span>
-        </span>
-        <span className="text-3xl font-extrabold text-gray-400 mx-7">|</span>
-        <span>
-          <span className="text-2xl font-extrabold" style={{ color: "#b2e7ff" }}>{player2}</span>
-          <span className="ml-2 text-3xl text-white font-black"> {score2}</span>
-        </span>
+      <div className="flex flex-col lg:flex-row gap-3 items-start">
+        {renderPlayerColumn(1, picks[1], player1)}
+        {renderPlayerColumn(2, picks[2], player2)}
       </div>
     </div>
   );

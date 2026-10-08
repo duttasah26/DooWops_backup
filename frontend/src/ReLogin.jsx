@@ -1,15 +1,13 @@
 // ReLoginButton.jsx
 import React from "react";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
 export default function ReLoginButton({ message = "Spotify session expired or missing. Please reconnect." }) {
   return (
-    <div className="text-center my-6">
-      <p className="mb-2 text-red-400 font-semibold">{message}</p>
-      <a
-        href="http://localhost:5000/auth/login"
-        className="retro-btn bg-green-600 px-6 py-2 font-bold text-white shadow hover:bg-green-700 transition"
-        style={{ display: "inline-block" }}
-      >
+    <div className="box text-center my-4">
+      <p className="mb-3 font-bold">{message}</p>
+      <a href={`${BACKEND_URL}/auth/login`} className="btn btn-lime btn-big">
         Reconnect Spotify
       </a>
     </div>

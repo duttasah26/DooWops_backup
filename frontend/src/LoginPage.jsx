@@ -1,5 +1,7 @@
 import React from "react";
 import { FaSpotify, FaYoutube } from "react-icons/fa";
+import YouTubePlayer from "./YouTubePlayer";
+import usePageTitle from "./usePageTitle";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
@@ -20,60 +22,69 @@ const BUTTON_GIFS = [
   "y2k4.gif",
 ];
 
-export default function LoginPage({ error, onYouTubeMode }) {
+export default function LoginPage({ error, spotifyReady, onSpotify, onYouTubeMode, onOnline }) {
+  usePageTitle("home");
   return (
-    <div className="flex flex-col items-center text-center gap-3 py-3">
-      <h2 className="text-3xl font-segoe italic text-retro-olive">Hello everyone, welcome to doo-wops!</h2>
-      <p className="text-sm text-gray-700 max-w-sm">
-        Log in with Spotify to play with your own playlists, or jump straight in with YouTube mode.
-      </p>
-      {error && (
-        <div className="text-red-700 font-semibold max-w-xs border border-red-300 bg-red-50 px-4 py-2 rounded">
-          {error}
-        </div>
-      )}
-      <a
-        href={`${BACKEND_URL}/auth/login`}
-        className="retro-btn flex items-center gap-2 bg-green-600 px-6 py-3 text-white font-bold font-segoe shadow hover:bg-green-700 transition text-lg"
-      >
-        <FaSpotify /> Login with Spotify
-      </a>
-      <div className="text-gray-500 text-sm">or</div>
-      <button
-        onClick={onYouTubeMode}
-        className="retro-btn flex items-center gap-2 bg-red-700 px-6 py-3 text-white font-bold shadow hover:bg-red-800 transition text-lg"
-      >
-        <FaYoutube /> Play with YouTube
-      </button>
-      <p className="text-xs text-gray-500 max-w-xs">
-        YouTube mode uses YouTube playlists — no Spotify account needed.
-      </p>
+    <div className="flex flex-col gap-3">
+      <h2 className="h-era">hello everyone, welcome to doo-wops!</h2>
 
-      <div className="w-full border border-gray-300 bg-white overflow-hidden">
-        <div className="flex w-max seamless-marquee-track">
-          {[...BUTTON_GIFS, ...BUTTON_GIFS].map((name, i) => (
-            <img
-              key={name + i}
-              src={`/buttons/${name}`}
-              alt=""
-              className="w-[150px] h-[20px] mx-0.5 pixelated shrink-0"
-            />
-          ))}
+      <div className="box">
+        <p className="mb-3">
+          doo-wops is a 1v1 song game: take turns picking tracks from a playlist, then
+          score each other's picks at the end. Log in with Spotify to use your own
+          playlists, or jump straight in with YouTube mode, no account needed.
+        </p>
+        {error && (
+          <p className="mb-3 rounded border border-red-300 bg-red-50 text-red-800 px-3 py-2 font-bold">{error}</p>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {spotifyReady ? (
+            <button type="button" onClick={onSpotify} className="btn btn-lime btn-big">
+              <FaSpotify /> Play with Spotify
+            </button>
+          ) : (
+            <a href={`${BACKEND_URL}/auth/login`} className="btn btn-lime btn-big">
+              <FaSpotify /> Login with Spotify
+            </a>
+          )}
+          <span>or</span>
+          <button type="button" onClick={onYouTubeMode} className="btn btn-red btn-big">
+            <FaYoutube /> Play with YouTube
+          </button>
         </div>
       </div>
 
-      <div className="w-full text-left">
-        <div className="bg-retro-blue text-white font-bold text-sm px-3 py-1.5 rounded-t flex items-center gap-1">
-          featured song
+      <div className="box flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-bold">online 1v1</div>
+          <div>Play a friend on their own computer. Make a room, send them the link.</div>
         </div>
-        <div className="border border-t-0 border-gray-300 bg-black">
-          <iframe
-            className="w-full aspect-video"
-            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            title="Featured Song"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+        <button type="button" onClick={onOnline} className="btn btn-red btn-big">
+          <FaYoutube /> Play online
+        </button>
+      </div>
+
+      <div className="btnwall">
+        {BUTTON_GIFS.map(name => <img key={name} src={`/buttons/${name}`} alt="" />)}
+      </div>
+
+      <h2 className="h-era mt-1">featured song</h2>
+      <YouTubePlayer videoId="dQw4w9WgXcQ" title="Rick Astley - Never Gonna Give You Up" autoplay={false} />
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="box">
+          <div className="font-bold mb-1">how to play</div>
+          <ol className="list-decimal pl-5">
+            <li>Pick a playlist and enter both names.</li>
+            <li>Each round you hear 3 songs and keep one.</li>
+            <li>The last round has 5 songs to choose from.</li>
+            <li>At the end, play every pick back and hand out points.</li>
+          </ol>
+        </div>
+        <div className="box">
+          <div className="font-bold mb-1">modes</div>
+          <p className="mb-2"><b>Spotify:</b> your own playlists, full tracks with Premium.</p>
+          <p><b>YouTube:</b> any public playlist, videos play right on the page.</p>
         </div>
       </div>
     </div>
