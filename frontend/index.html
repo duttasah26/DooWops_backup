@@ -1,15 +1,252 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/doo_wops_icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>doo-wops! 1v1 song game</title>
-    <script src="https://iframe.chat/scripts/main.min.js"></script>
-  </head>
-  <body>
-    <!-- This is where your React app will mount -->
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>doo-wops! 1v1 song game</title>
+  <link rel="icon" type="image/png" href="/doo_wops_icon.png">
+  <script src="https://iframe.chat/scripts/main.min.js"></script>
+</head>
+<body>
+
+<img class="bg-still" src="/background/RM94-2.png" alt="">
+<video class="bg-video" src="/background/background.mp4" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>
+
+<div id="page">
+
+  <!-- header: logo + banner, then the date and ticker strip -->
+  <div id="header">
+    <a id="logo" href="/" data-go="home"><img src="/doo_wops_icon.png" alt="doo-wops!"></a>
+    <div id="banner"><img src="/500x100-banner.gif" alt="Let's make some noise"></div>
+  </div>
+  <div id="datebar">
+    <div id="date"></div>
+    <div id="ticker"><marquee scrollamount="5">10/8/2026 update: rooms got a big upgrade! Watchers vote, the host runs the room, and there's a new radio on the home page. More soon~</marquee></div>
+  </div>
+
+  <!-- game nav: replaces the left sidebar while a game is on -->
+  <div id="topnav">
+    <a href="/" data-go="home">home</a>
+    <span id="topnav-status"></span>
+  </div>
+
+  <div id="cols">
+
+    <!-- left sidebar -->
+    <div id="left">
+      <div class="pill pill-lime">play!</div>
+      <div class="side-links">
+        <a href="/" data-go="home">Home</a>
+        <a href="/" data-go="setup">Create a room</a>
+        <a href="/" data-go="setup">Join a room</a>
+      </div>
+      <div class="pill pill-teal">about.dw</div>
+      <div class="side-links">
+        <span>Credits</span>
+        <span>Troubleshooting</span>
+        <span>Contact</span>
+      </div>
+      <div class="pill pill-blue">the.noise</div>
+      <div class="side-links">
+        <span>Sound Check</span>
+        <span>Fun Facts</span>
+        <span>Source</span>
+      </div>
+
+      <div class="pill pill-green">update.log</div>
+      <div class="updatelog">
+        <div class="entry">
+          <span class="date">10 / 8 / 2026</span> <span class="new">new!</span>
+          <div class="title">rooms got a big upgrade</div>
+          <ul>
+            <li>three stations to pick from, or paste your own playlist</li>
+            <li>the host can change the playlist and rounds, move people, kick, and hand over host</li>
+            <li>players can step out to watch, watchers can take an empty seat</li>
+            <li>watchers vote at the end (no watchers? the host does)</li>
+            <li>winner announcement, then rematch</li>
+            <li>leaving a room actually takes you out now</li>
+            <li>doo-wops radio: an iPod at the bottom of the home page</li>
+          </ul>
+        </div>
+        <div class="entry">
+          <span class="date">10 / 8 / 2026</span>
+          <div class="title">online 1v1 is here!</div>
+          <ul>
+            <li>play a friend on their own computer</li>
+            <li>make a room, send the invite link or the code</li>
+            <li>the tab title changes with each screen</li>
+          </ul>
+        </div>
+        <div class="entry">
+          <span class="date">10 / 8 / 2026</span>
+          <div class="title">big look refresh</div>
+          <ul>
+            <li>new panels and buttons, bigger text</li>
+            <li>the video is the main frame in game</li>
+            <li>more ads from SideLink and NeoLink, plus a stamp wall</li>
+          </ul>
+        </div>
+        <div class="entry">
+          <span class="date">7 / 31 / 2026</span>
+          <div class="title">chat + featured song</div>
+          <ul><li>added a live chat box</li><li>added the featured song section</li></ul>
+        </div>
+        <div class="entry">
+          <span class="date">7 / 19 / 2026</span>
+          <div class="title">YouTube mode</div>
+          <ul><li>play with any YouTube playlist</li></ul>
+        </div>
+        <div class="entry">
+          <span class="date">7 / 5 / 2026</span>
+          <div class="title">relaunch</div>
+          <ul><li>site got the full retro relaunch</li></ul>
+        </div>
+      </div>
+
+      <div class="adbar"><span></span><span></span><span></span><span></span><span></span><span></span><b>ad</b></div>
+      <div class="ad"><iframe width="180" height="180" style="border:none" src="https://nvlk.dimden.dev/" name="neolink" title="NeoLink"></iframe></div>
+      <img class="vert-banner" src="/vert-box-banner.gif" alt="">
+    </div>
+
+    <!-- main column: the three screens -->
+    <div id="main">
+
+      <div id="screen-home">
+        <h2 class="h">hello everyone, welcome to doo-wops!</h2>
+        <div class="box">
+          <div class="box-head">what is this?</div>
+          <div class="box-body">
+            <p>doo-wops is a 1v1 song game. Two players take turns picking songs from a playlist,
+            and whoever's watching votes for the best picks at the end. Make a room, send your
+            friends the link, and play from your own computers.</p>
+            <a class="btn btn-go btn-big" href="/" data-go="setup">Create a room</a>
+            <a class="btn btn-big" href="/" data-go="setup">Join a room</a>
+          </div>
+        </div>
+
+        <div class="gifstrip"></div>
+
+        <div class="box">
+          <div class="box-head">featured song</div>
+          <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="featured song" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+        </div>
+
+        <div class="gifstrip"></div>
+
+        <div class="radio">
+            <div id="ipod" class="ipod">
+              <div class="ipod-screen">
+                <div class="ipod-np">NOW PLAYING <span id="ipod-mode">shuffle</span></div>
+                <div class="ipod-face">
+                  <!-- the YouTube player sits under the album art: on screen but hidden -->
+                  <div class="ipod-player"><div id="ipod-player"></div></div>
+                  <img id="ipod-art" class="ipod-art" src="/doo_wops_icon.png" alt="">
+                  <span id="ipod-spin" class="spinner spinner-light" hidden></span>
+                </div>
+                <div class="ipod-meta" id="ipod-meta"><div class="ipod-song">doo-wops!</div><div class="ipod-artist">press play</div></div>
+              </div>
+              <div class="ipod-wheel">
+                <button class="w-menu" data-ipod="menu" title="shuffle on / off">MENU</button>
+                <button class="w-prev" data-ipod="prev" title="previous song">&#9664;&#9664;</button>
+                <button class="w-next" data-ipod="next" title="next song">&#9654;&#9654;</button>
+                <button class="w-play" data-ipod="play" title="play / pause">&#9654;&#10074;&#10074;</button>
+                <button class="w-center" data-ipod="play" title="play / pause"></button>
+              </div>
+            </div>
+        </div>
+
+        <div class="stamps stamps-wide">
+          <img src="/stamps/ipod.gif" alt=""><img src="/stamps/mtv.gif" alt="">
+          <img src="/stamps/daft-punk.gif" alt=""><img src="/stamps/katy-perry.gif" alt="">
+          <img src="/stamps/metro-ipod.gif" alt=""><img src="/stamps/neue-flower.gif" alt="">
+          <img src="/stamps/ocean.gif" alt=""><img src="/stamps/metro2.gif" alt="">
+        </div>
+      </div>
+
+      <div id="screen-setup" hidden>
+        <h2 class="h">online 1v1</h2>
+        <div class="gifstrip"></div>
+        <div class="cols2">
+          <div>
+            <form class="box" id="create-form">
+              <div class="box-head">create a room</div>
+              <div class="box-body">
+                <label class="field"><span class="label">your name</span>
+                  <input class="txt wide" name="name" maxlength="24" autocomplete="off"></label>
+                <div class="field"><span class="label">playlist</span><div id="create-playlist"></div></div>
+                <label class="field"><span class="label">rounds</span>
+                  <select class="txt" name="rounds">
+                    <option>2</option><option>3</option><option>4</option><option selected>5</option>
+                    <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+                  </select> <span class="small">(the last round has 5 songs)</span></label>
+                <p class="error" id="create-error" hidden></p>
+                <button class="btn btn-go btn-big" type="submit">Create room</button>
+              </div>
+            </form>
+          </div>
+          <div>
+            <form class="box" id="join-form">
+              <div class="box-head">join a room</div>
+              <div class="box-body">
+                <label class="field"><span class="label">your name</span>
+                  <input class="txt wide" name="name" maxlength="24" autocomplete="off"></label>
+                <label class="field"><span class="label">room code</span>
+                  <input class="txt code" name="code" maxlength="5" autocomplete="off"></label>
+                <p class="error" id="join-error" hidden></p>
+                <button class="btn btn-go btn-big" type="submit">Join room</button>
+                <p class="small">You get a free seat if there is one, otherwise you watch and vote.</p>
+              </div>
+            </form>
+            <div class="box">
+              <div class="box-head">how to play</div>
+              <div class="box-body">
+                <ol class="steps">
+                  <li>The host makes a room and sends the invite link.</li>
+                  <li>Two people sit in the player seats. Everyone else watches.</li>
+                  <li>Each round, players take turns: listen through 3 songs and keep one. The last round has 5.</li>
+                  <li>At the end the watchers hand out +1s to the picks they liked (no watchers? the host does).</li>
+                  <li>The host hits Finish and the winner is announced.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-room" hidden>
+        <div id="room-flash"></div>
+        <div id="room-body"></div>
+      </div>
+
+    </div>
+
+    <!-- right sidebar: chatbox + ads -->
+    <div id="right">
+      <!-- Chattable finds its frame by the id "chattable"; keep it. -->
+      <div class="chatbox">
+        <form id="chat-name" class="chat-name">
+          <input class="txt" name="handle" maxlength="20" placeholder="your chat name" autocomplete="off">
+          <button class="btn" type="submit">set</button>
+        </form>
+        <iframe id="chattable" src="https://iframe.chat/embed?chat=doo-wops" title="chatbox"></iframe>
+      </div>
+      <div class="adbar"><span></span><span></span><span></span><span></span><span></span><span></span><b>ad</b></div>
+      <div class="ad"><iframe width="150" height="450" style="border:none" src="https://dogspit.nekoweb.org/sidelink.html" name="sidelink" title="SideLink Ads"></iframe></div>
+    </div>
+
+  </div>
+
+  <div id="footer">
+    <div class="copy">All assets used belong to their respective owners. &copy; doo-wops 2026</div>
+    <div class="footlinks"><a href="/" data-go="home">Home</a> | <span>Credits</span> | <span>Contact</span> | <span>Source</span> | <span>Guestbook</span></div>
+    <div class="btnwall">
+      <img src="/buttons/4music.gif" alt=""><img src="/buttons/kiss.gif" alt=""><img src="/buttons/more4.gif" alt="">
+      <img src="/buttons/nokia.gif" alt=""><img src="/buttons/vevo.gif" alt=""><img src="/buttons/y2k4.gif" alt="">
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
 </html>

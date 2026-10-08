@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "marquee",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-10-08T23:31:58.989Z",
+        "reason": "user confirmed: asked for the scrolling update ticker and 'marquee of the little gifs between the sections one line'"
+      }
+    ]
+  }
+}
