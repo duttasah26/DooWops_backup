@@ -95,7 +95,9 @@ def normalize_yt_track(item: dict) -> Optional[dict]:
     return {
         "id": vid_id,
         "name": snippet.get("title", "Unknown"),
-        "artists": [{"name": snippet.get("channelTitle", "")}],
+        # videoOwnerChannelTitle is the song's uploader; channelTitle on a
+        # playlist item is just whoever owns the playlist.
+        "artists": [{"name": (snippet.get("videoOwnerChannelTitle") or snippet.get("channelTitle", "")).removesuffix(" - Topic")}],
         "album": {"images": [{"url": thumb_url}]},
         "uri": vid_id,
         "preview_url": None,
@@ -308,6 +310,7 @@ room_manager = RoomManager(load_tracks=get_youtube_tracks)
 class CreateRoomBody(BaseModel):
     name: str = Field(min_length=1, max_length=24)
     playlist_id: str = Field(min_length=1, max_length=100)
+    playlist_name: str = Field(default="custom playlist", max_length=60)
     num_rounds: int = Field(ge=2, le=10)
 
 
@@ -319,15 +322,17 @@ class JoinRoomBody(BaseModel):
 async def create_room(body: CreateRoomBody):
     # Load the playlist up front so a bad link fails here, not mid-game.
     try:
-        tracks = await get_youtube_tracks(body.playlist_id)
+        tracks = await get_youtube_tracks(body.playlist_id.strip())
     except HTTPException:
         raise
     except Exception:
         raise HTTPException(status_code=502, detail="Couldn't load that YouTube playlist")
     if len(tracks) < body.num_rounds * 2 * 3 + 2:
         raise HTTPException(status_code=400, detail="That playlist is too short for this many rounds")
-    room = room_manager.create(body.name.strip(), body.playlist_id, body.num_rounds)
-    return {"code": room.code, "token": room.seats[1]["token"], "seat": 1}
+    room, host = room_manager.create(
+        body.name.strip(), body.playlist_id.strip(), body.playlist_name.strip() or "custom playlist", body.num_rounds
+    )
+    return {"code": room.code, "token": host.token}
 
 
 @app.get("/api/rooms/{code}")
@@ -335,11 +340,13 @@ def get_room(code: str):
     room = room_manager.get(code)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
+    host = room.members.get(room.host_id)
     return {
         "code": room.code,
-        "host": room.seats[1]["name"],
-        "seat_open": room.seats[2] is None,
+        "host": host.name if host else None,
         "status": room.status,
+        "seats_open": sum(1 for s in room.seats.values() if s is None),
+        "members": len(room.members),
     }
 
 
@@ -348,29 +355,35 @@ def join_room(code: str, body: JoinRoomBody):
     room = room_manager.get(code)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    token = room_manager.join(room, body.name.strip())
-    if not token:
-        raise HTTPException(status_code=409, detail="This room already has two players. You can still watch.")
-    return {"code": room.code, "token": token, "seat": 2}
+    member = room_manager.join(room, body.name.strip())
+    if not member:
+        raise HTTPException(status_code=409, detail="This room is full.")
+    return {"code": room.code, "token": member.token}
 
 
 @app.websocket("/ws/rooms/{code}")
 async def room_socket(ws: WebSocket, code: str, token: Optional[str] = None):
+    # Accept before closing so the browser receives our close code; closing
+    # during the handshake only shows up as a generic failure (1006).
+    await ws.accept()
     room = room_manager.get(code)
     if not room:
         await ws.close(code=4404)
         return
-    seat = room.seat_for_token(token)  # None = spectator
-    await room_manager.connect(room, ws, seat)
+    me = room.member_for_token(token)
+    if not me:
+        await ws.close(code=4401)  # not (or no longer) a member: join again
+        return
+    await room_manager.connect(room, ws, me)
     try:
         while True:
             msg = await ws.receive_json()
             if isinstance(msg, dict):
-                await room_manager.handle(room, seat, msg)
-    except (WebSocketDisconnect, ValueError):
+                await room_manager.handle(room, me, msg, ws)
+    except (WebSocketDisconnect, ValueError, RuntimeError):
         pass
     finally:
-        await room_manager.disconnect(room, ws)
+        await room_manager.disconnect(room, ws, me)
 
 
 if __name__ == "__main__":
