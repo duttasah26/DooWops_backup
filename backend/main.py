@@ -7,10 +7,13 @@ from typing import Optional
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
+
+from rooms import RoomManager
 
 load_dotenv()
 
@@ -20,6 +23,11 @@ REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://localhost:5000/auth/cal
 PORT = int(os.getenv("PORT", 5000))
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+# Sites allowed to call this API from the browser. Comma-separated, so the live
+# site and local dev can both be listed, e.g.
+# "https://doowops.vercel.app,http://localhost:5173". The first one is where the
+# Spotify login redirects back to.
+FRONTEND_URLS = [u.strip().rstrip("/") for u in FRONTEND_URL.split(",") if u.strip()]
 
 if not CLIENT_ID or not CLIENT_SECRET:
     raise RuntimeError("Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET in .env")
@@ -35,7 +43,7 @@ app = FastAPI(title="DooWops API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=FRONTEND_URLS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -200,9 +208,9 @@ async def callback(
 ):
     global latest_token, latest_refresh_token
     if error:
-        return RedirectResponse(f"{FRONTEND_URL}/#error={error}")
+        return RedirectResponse(f"{FRONTEND_URLS[0]}/#error={error}")
     if not code:
-        return RedirectResponse(f"{FRONTEND_URL}/#error=missing_code")
+        return RedirectResponse(f"{FRONTEND_URLS[0]}/#error=missing_code")
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
@@ -219,7 +227,7 @@ async def callback(
         )
 
     if resp.status_code != 200:
-        return RedirectResponse(f"{FRONTEND_URL}/#error=token_exchange_failed")
+        return RedirectResponse(f"{FRONTEND_URLS[0]}/#error=token_exchange_failed")
 
     body = resp.json()
     latest_token = body.get("access_token")
@@ -229,7 +237,7 @@ async def callback(
         # Force re-consent to get a refresh token
         return RedirectResponse("/auth/login")
 
-    return RedirectResponse(f"{FRONTEND_URL}/#access_token={latest_token}")
+    return RedirectResponse(f"{FRONTEND_URLS[0]}/#access_token={latest_token}")
 
 
 # ── Playlist routes ───────────────────────────────────────────────────────────
@@ -264,13 +272,8 @@ async def get_spotify_playlist(
     return {"tracks": fisher_yates_shuffle(available)[:count]}
 
 
-@app.get("/api/youtube-playlist/{playlist_id}")
-async def get_youtube_playlist(
-    playlist_id: str,
-    count: int = Query(3, ge=1, le=20),
-    exclude: str = Query(""),
-):
-    exclude_ids = {e.strip() for e in exclude.split(",") if e.strip()} if exclude else set()
+async def get_youtube_tracks(playlist_id: str) -> list:
+    """All playable tracks in a YouTube playlist, normalized, via the 24h cache."""
     now = datetime.utcnow()
     cached = yt_playlist_cache.get(playlist_id)
 
@@ -280,9 +283,94 @@ async def get_youtube_playlist(
         raw_items = await fetch_all_yt_items(playlist_id)
         yt_playlist_cache[playlist_id] = {"tracks": raw_items, "expires_at": now + CACHE_TTL}
 
-    normalized = [t for item in raw_items if (t := normalize_yt_track(item)) is not None]
+    return [t for item in raw_items if (t := normalize_yt_track(item)) is not None]
+
+
+@app.get("/api/youtube-playlist/{playlist_id}")
+async def get_youtube_playlist(
+    playlist_id: str,
+    count: int = Query(3, ge=1, le=20),
+    exclude: str = Query(""),
+):
+    exclude_ids = {e.strip() for e in exclude.split(",") if e.strip()} if exclude else set()
+    normalized = await get_youtube_tracks(playlist_id)
     available = [t for t in normalized if t["id"] not in exclude_ids]
     return {"tracks": fisher_yates_shuffle(available)[:count]}
+
+
+# ── Online rooms ─────────────────────────────────────────────────────────────
+# See rooms.py. YouTube playlists only: Spotify playback needs a Premium login
+# on every device and the backend still holds a single global Spotify session.
+
+room_manager = RoomManager(load_tracks=get_youtube_tracks)
+
+
+class CreateRoomBody(BaseModel):
+    name: str = Field(min_length=1, max_length=24)
+    playlist_id: str = Field(min_length=1, max_length=100)
+    num_rounds: int = Field(ge=2, le=10)
+
+
+class JoinRoomBody(BaseModel):
+    name: str = Field(min_length=1, max_length=24)
+
+
+@app.post("/api/rooms")
+async def create_room(body: CreateRoomBody):
+    # Load the playlist up front so a bad link fails here, not mid-game.
+    try:
+        tracks = await get_youtube_tracks(body.playlist_id)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=502, detail="Couldn't load that YouTube playlist")
+    if len(tracks) < body.num_rounds * 2 * 3 + 2:
+        raise HTTPException(status_code=400, detail="That playlist is too short for this many rounds")
+    room = room_manager.create(body.name.strip(), body.playlist_id, body.num_rounds)
+    return {"code": room.code, "token": room.seats[1]["token"], "seat": 1}
+
+
+@app.get("/api/rooms/{code}")
+def get_room(code: str):
+    room = room_manager.get(code)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    return {
+        "code": room.code,
+        "host": room.seats[1]["name"],
+        "seat_open": room.seats[2] is None,
+        "status": room.status,
+    }
+
+
+@app.post("/api/rooms/{code}/join")
+def join_room(code: str, body: JoinRoomBody):
+    room = room_manager.get(code)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    token = room_manager.join(room, body.name.strip())
+    if not token:
+        raise HTTPException(status_code=409, detail="This room already has two players. You can still watch.")
+    return {"code": room.code, "token": token, "seat": 2}
+
+
+@app.websocket("/ws/rooms/{code}")
+async def room_socket(ws: WebSocket, code: str, token: Optional[str] = None):
+    room = room_manager.get(code)
+    if not room:
+        await ws.close(code=4404)
+        return
+    seat = room.seat_for_token(token)  # None = spectator
+    await room_manager.connect(room, ws, seat)
+    try:
+        while True:
+            msg = await ws.receive_json()
+            if isinstance(msg, dict):
+                await room_manager.handle(room, seat, msg)
+    except (WebSocketDisconnect, ValueError):
+        pass
+    finally:
+        await room_manager.disconnect(room, ws)
 
 
 if __name__ == "__main__":

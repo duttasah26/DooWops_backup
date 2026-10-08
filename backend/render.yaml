@@ -14,5 +14,7 @@ services:
         sync: false
       - key: YOUTUBE_API_KEY
         sync: false
+      # Comma-separated site addresses allowed to call the API; the first is
+      # where Spotify login sends people back. Set it in the Render dashboard.
       - key: FRONTEND_URL
-        value: http://localhost:5173
+        sync: false
