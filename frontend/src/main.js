@@ -9,16 +9,26 @@ import {
 import { openRoom } from "./room.js";
 import { initIpod } from "./ipod.js";
 
-var screens = ["home", "setup", "room"];
+var screens = ["home", "setup", "room", "wip"];
 
 function show(name) {
   screens.forEach(function (s) {
     document.getElementById("screen-" + s).hidden = s !== name;
   });
   document.body.classList.remove("in-game");
+  setTab(name);
   if (name === "home") setTitle("home");
   if (name === "setup") setTitle("create or join a room");
   window.scrollTo(0, 0);
+}
+
+// Winamp-style tab bar: the tab for the current screen is the white one.
+function setTab(name) {
+  document.querySelectorAll("#tabs [data-tab]").forEach(function (t) {
+    t.classList.toggle("on", t.dataset.tab === name);
+  });
+  document.getElementById("tab-room").hidden = name !== "room";
+  if (name !== "room") document.getElementById("tab-status").textContent = "";
 }
 
 function setRoomInUrl(code) {
@@ -45,6 +55,7 @@ function enterRoom(code, token) {
   saveToken(code, token);
   setRoomInUrl(code);
   show("room");
+  document.getElementById("tab-room").textContent = "Room " + code;
   openRoom(code, token, {
     onExit: goHome,
     onRejoin: function (c) { goSetup(c); },
@@ -127,7 +138,16 @@ document.addEventListener("click", function (e) {
   e.preventDefault();
   if (el.dataset.go === "home") goHome();
   else if (el.dataset.go === "setup") goSetup();
+  else if (el.dataset.go === "wip") goWip(el.dataset.page || "Coming Soon");
 });
+
+// Pages that aren't built yet (Credits, Contact, ...) all land here.
+function goWip(page) {
+  setRoomInUrl(null);
+  show("wip");
+  document.getElementById("wip-title").textContent = page;
+  setTitle(page.toLowerCase() + ", coming soon");
+}
 
 // ── start ──────────────────────────────────────────────────────────────────
 
@@ -139,15 +159,19 @@ document.getElementById("date").textContent = new Date().toLocaleDateString("en-
   month: "short", day: "numeric", year: "numeric",
 });
 
-// One-line scrolling strips of the little button gifs between sections. The
-// row is written twice so the scroll loops without a gap.
+// Marquee strips of the little button gifs between sections. The row is
+// written twice and scrolled by CSS, so a strip is full from the first frame
+// (a <marquee> starts empty) and loops without a gap. It never pauses.
 var BUTTON_GIFS = [
-  "4music.gif", "538-turnmeon.gif", "daft-punk.gif", "itv3.gif", "kiss.gif", "london2012.gif", "more4.gif",
-  "nokia.gif", "nrkp3.gif", "pool.gif", "radio-activity.gif", "techno.gif", "vevo.gif", "y2k4.gif",
+  "4music.gif", "brat.gif", "538-turnmeon.gif", "freely2.gif", "daft-punk.gif", "grillz.gif",
+  "itv3.gif", "hardcore-tanoc.gif", "kiss.gif", "music.gif", "london2012.gif", "plastic.gif",
+  "more4.gif", "three-question-button2.gif", "nokia.gif", "triples4.gif", "nrkp3.gif", "viva-happy.gif",
+  "pool.gif", "wow-wow.gif", "radio-activity.gif", "y2k.gif", "techno.gif", "vevo.gif", "y2k4.gif",
 ];
 document.querySelectorAll(".gifstrip").forEach(function (strip, i) {
   // start each strip at a different gif so they don't line up
-  var shifted = BUTTON_GIFS.slice(i * 5).concat(BUTTON_GIFS.slice(0, i * 5));
+  var start = (i * 7) % BUTTON_GIFS.length;
+  var shifted = BUTTON_GIFS.slice(start).concat(BUTTON_GIFS.slice(0, start));
   var html = shifted.map(function (g) { return '<img src="/buttons/' + g + '" alt="">'; }).join("");
   strip.innerHTML = '<div class="gifstrip-track">' + html + html + "</div>";
 });
@@ -166,6 +190,21 @@ chatName.addEventListener("submit", function (e) {
   saveName(handle);
   window.chattable.sendMessageToFrame({ type: "setName", value: handle });
   window.chattable.user.name = handle;
+});
+
+// "Get Started" row: a photo above each column, like MySpace's "Cool New
+// Videos". The photos in /sections are shuffled into the columns each visit.
+var SECTION_PHOTOS = [
+  "preity.jpg", "834dd3563c098f12d61ec9b299dfe8c6.jpg",
+  "ad54690a380c8c4d9687fd636e5b18e9.jpg", "bbc643660ffae58577a0f2ea30572993.jpg",
+];
+var photos = SECTION_PHOTOS.slice();
+for (var k = photos.length - 1; k > 0; k--) {
+  var r = Math.floor(Math.random() * (k + 1));
+  var tmp = photos[k]; photos[k] = photos[r]; photos[r] = tmp;
+}
+document.querySelectorAll(".gs-photo").forEach(function (img, i) {
+  img.src = "/sections/" + photos[i % photos.length];
 });
 
 initIpod();

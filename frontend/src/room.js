@@ -104,7 +104,7 @@ function gone(message, canRejoin) {
   showFlash("");
   setTitle("left the room");
   body.innerHTML =
-    '<div class="box"><div class="box-head">room ' + esc(code) + '</div><div class="box-body">' +
+    '<div class="box"><div class="box-head">Room ' + esc(code) + '</div><div class="box-body">' +
     "<p>" + esc(message) + "</p>" +
     (canRejoin ? '<button class="btn btn-go" data-act="rejoin">Join again</button> ' : "") +
     '<button class="btn" data-act="home">Back home</button></div></div>';
@@ -152,7 +152,9 @@ function personLabel(p) {
 }
 
 function presence(p) {
-  return p.connected ? '<span class="on">online</span>' : '<span class="away">away</span>';
+  return p.connected
+    ? '<span class="on"><img class="online" src="/icons/online-cd.png" alt="">online</span>'
+    : '<span class="away">away</span>';
 }
 
 function seatName(n) {
@@ -175,45 +177,46 @@ function render(s) {
 
   document.body.classList.toggle("in-game", next !== "lobby");
   var p1 = s.seats["1"], p2 = s.seats["2"];
-  document.getElementById("topnav-status").textContent =
-    "room " + s.code + (next === "lobby" ? "" : ": " + seatName(1) + " vs " + seatName(2));
+  document.getElementById("tab-status").textContent =
+    next === "lobby" ? (p1 && p2 ? "ready to start" : "waiting for players") : seatName(1) + " vs " + seatName(2);
 
   if (next === "lobby") renderLobby(s, p1, p2);
   else if (next === "game") renderGame(s);
   else renderVotes(s);
 }
 
+var LEAVE = '<button class="btn btn-red" data-act="leave">Leave room</button>';
+
 var SKELETONS = {
   lobby:
-    '<h2 class="h">room <span id="r-code"></span></h2>' +
+    '<div class="room-head"><h2 class="h">room <span id="r-code"></span></h2>' + LEAVE + "</div>" +
     '<div id="r-notice"></div>' +
-    '<div class="box"><div class="box-head">invite your friends</div><div class="box-body" id="r-invite"></div></div>' +
+    '<div class="box"><div class="box-head">Invite Your Friends</div><div class="box-body" id="r-invite"></div></div>' +
     '<div class="cols2">' +
     "<div>" +
-    '<div class="box"><div class="box-head">players</div><div id="r-seats"></div></div>' +
-    '<div class="box"><div class="box-head">watching</div><div id="r-watchers"></div></div>' +
-    '<div class="box"><div class="box-head">room settings</div><form class="box-body" id="r-settings" onsubmit="return false"></form></div>' +
+    '<div class="box"><div class="box-head no-splat">Players <span class="more" id="r-seatcount"></span></div><div id="r-seats"></div></div>' +
+    '<div class="box"><div class="box-head no-splat">Watching <span class="more" id="r-wcount"></span></div><div id="r-watchers"></div></div>' +
+    '<div class="box"><div class="box-head no-splat">Room Settings</div><form class="box-body" id="r-settings" onsubmit="return false"></form></div>' +
     "</div>" +
     "<div>" +
-    '<div class="box"><div class="box-head">start</div><div class="box-body" id="r-start"></div></div>' +
-    '<div class="box"><div class="box-head">how to play</div><div class="box-body">' + HOW_TO_PLAY + "</div></div>" +
+    '<div class="box"><div class="box-head">Start The Game</div><div class="box-body" id="r-start"></div></div>' +
+    '<div class="box"><div class="box-head">How To Play</div><div class="box-body">' + HOW_TO_PLAY + "</div></div>" +
     "</div>" +
-    "</div>" +
-    '<p><button class="btn" data-act="leave">Leave room</button></p>',
+    "</div>",
 
   game:
-    '<div class="turn-head"><h2 class="h" id="g-heading"></h2><b id="g-round"></b></div>' +
-    '<div class="box"><div class="box-head" id="g-title">now playing</div><div class="video" id="g-video"></div></div>' +
+    '<div class="room-head"><h2 class="h" id="g-heading"></h2><span class="room-head-right"><b id="g-round"></b>' + LEAVE + "</span></div>" +
+    '<div class="box"><div class="box-head" id="g-title">Now Playing</div><div class="video" id="g-video"></div></div>' +
     '<div class="box"><div class="box-body" id="g-controls"></div></div>' +
-    '<div class="box"><div class="box-head">in the room</div><div class="box-body" id="g-people"></div></div>',
+    '<div class="box"><div class="box-head">In The Room</div><div class="box-body" id="g-people"></div></div>',
 
   votes:
-    '<h2 class="h" id="v-heading"></h2>' +
+    '<div class="room-head"><h2 class="h" id="v-heading"></h2>' + LEAVE + "</div>" +
     '<div class="cols-votes">' +
-    '<div class="box"><div class="box-head" id="v-title">now playing</div><div class="video" id="v-video"></div></div>' +
-    '<div class="box"><div class="box-head">scorecard</div><div class="box-body" id="v-score"></div></div>' +
+    '<div class="box"><div class="box-head" id="v-title">Now Playing</div><div class="video" id="v-video"></div></div>' +
+    '<div class="box"><div class="box-head">Scorecard</div><div class="box-body" id="v-score"></div></div>' +
     "</div>" +
-    '<div class="box"><div class="box-head">every pick</div><div id="v-picks"></div></div>' +
+    '<div class="box"><div class="box-head">Every Pick <span class="more" id="v-count"></span></div><div id="v-picks"></div></div>' +
     '<div id="v-modal"></div>',
 };
 
@@ -236,8 +239,7 @@ function renderLobby(s, p1, p2) {
     var p = s.seats[n];
     var actions = "";
     if (!p) {
-      if (you.seat !== n) actions = act({ type: "sit", seat: n }, you.seat ? "Switch here" : "Sit here", "btn-go");
-      return "<tr><td class=\"seatno\">" + n + "</td><td class=\"empty\">empty seat</td><td></td><td class=\"acts\">" + actions + "</td></tr>";
+      return "<tr><td class=\"seatno\">" + n + "</td><td class=\"empty\">empty seat</td><td></td><td></td></tr>";
     }
     if (p.id === you.id) actions = act({ type: "watch" }, "Watch instead");
     else if (you.is_host) {
@@ -249,16 +251,18 @@ function renderLobby(s, p1, p2) {
     return "<tr><td class=\"seatno\">" + n + "</td><td>" + personLabel(p) + "</td><td>" + presence(p) + "</td><td class=\"acts\">" + actions + "</td></tr>";
   });
   setRegion("r-seats", '<table class="tbl">' + rows.join("") + "</table>");
+  setRegion("r-seatcount", ((p1 ? 1 : 0) + (p2 ? 1 : 0)) + " of 2 seats");
+  setRegion("r-wcount", s.watchers.length + " watching");
 
-  // watchers
+  // watchers: one seat button that takes whichever seat is free
+  var freeSeat = !s.seats[1] ? 1 : !s.seats[2] ? 2 : 0;
   var w = s.watchers.map(function (p) {
     var actions = "";
     if (p.id === you.id) {
-      [1, 2].forEach(function (n) { if (!s.seats[n]) actions += act({ type: "sit", seat: n }, "Sit in " + n, "btn-go"); });
+      if (freeSeat) actions = act({ type: "sit", seat: freeSeat }, "Switch to seat", "btn-go");
     } else if (you.is_host) {
       actions =
-        act({ type: "move", member_id: p.id, to: 1 }, "To seat 1") +
-        act({ type: "move", member_id: p.id, to: 2 }, "To seat 2") +
+        (freeSeat ? act({ type: "move", member_id: p.id, to: freeSeat }, "Move to seat") : "") +
         act({ type: "make_host", member_id: p.id }, "Make host") +
         act({ type: "kick", member_id: p.id }, "Kick", "btn-red");
     }
@@ -294,9 +298,11 @@ function renderLobby(s, p1, p2) {
   setRegion(
     "r-start",
     you.is_host
-      ? '<button class="btn btn-go btn-big wide" data-act="send" data-msg=\'{"type":"start"}\'' + (p1 && p2 ? "" : " disabled") + ">Start game</button>" +
+      ? '<img class="deco deco-center" src="/icons/equalizer.png" alt="">' +
+        '<button class="btn btn-go btn-big wide btn-ic ic-start" data-act="send" data-msg=\'{"type":"start"}\'' + (p1 && p2 ? "" : " disabled") + ">Start game</button>" +
           (p1 && p2 ? "" : '<div class="small center">needs two players in the seats</div>')
-      : "Waiting for " + esc(host ? host.name : "the host") + " to start the game."
+      : '<img class="deco deco-center" src="/icons/equalizer.png" alt="">' +
+          "Waiting for " + esc(host ? host.name : "the host") + " to start the game."
   );
 }
 
@@ -342,8 +348,7 @@ function renderGame(s) {
   setRegion(
     "g-people",
     "playing: <b>" + esc(seatName(1)) + "</b> vs <b>" + esc(seatName(2)) + "</b>" +
-      " &nbsp;|&nbsp; watching: " + (watchers.length ? watchers.join(", ") : "nobody") +
-      ' &nbsp;<button class="btn" data-act="leave">Leave room</button>'
+      " &nbsp;|&nbsp; watching: " + (watchers.length ? watchers.join(", ") : "nobody")
   );
 }
 
@@ -357,7 +362,7 @@ function renderVotes(s) {
   var results = s.status === "results";
 
   setTitle(results ? (s.result.winner ? seatName(s.result.winner) + " wins!" : "it's a tie!") : "voting");
-  setRegion("v-heading", results ? "final scores" : "time to vote!");
+  setRegion("v-heading", (results ? "final scores" : "time to vote!") + ' <img class="deco deco-inline" src="/icons/four-stars.png" alt="">');
 
   var np = s.now_playing;
   var playing = np ? g.picks[String(np.player)][np.index] : null;
@@ -387,6 +392,8 @@ function renderVotes(s) {
       (results ? '<div class="winner-line">' + (s.result.winner ? esc(seatName(s.result.winner)) + " wins!" : "It's a tie!") + "</div>" : "") +
       '<p class="small">' + who + "</p>" + (mine ? "<p>" + mine + "</p>" : "") + hostBtn
   );
+
+  setRegion("v-count", (score1 + score2) + " +1s so far");
 
   // every pick, round by round
   var cell = function (player, i) {
@@ -427,6 +434,7 @@ function renderVotes(s) {
       '<div class="modal-bg"><div class="modal" role="dialog" aria-label="winner">' +
         '<div class="modal-head">and the winner is...</div>' +
         '<div class="modal-body">' +
+        '<img class="deco deco-center" src="/icons/star-burst.png" alt="">' +
         '<div class="modal-winner">' + (r.winner ? esc(seatName(r.winner)) + "!" : "it's a tie!") + "</div>" +
         "<div>" + esc(n1) + " <b>" + r.scores["1"] + "</b> : <b>" + r.scores["2"] + "</b> " + esc(n2) + "</div>" +
         '<div class="modal-btns">' +

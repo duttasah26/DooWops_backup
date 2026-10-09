@@ -34,8 +34,10 @@ export function playlistIdFrom(text) {
   return v;
 }
 
+// Tab title, old-site style: "doo-wops! | Create Or Join A Room".
 export function setTitle(text) {
-  document.title = text ? text + " | doo-wops!" : "doo-wops!";
+  var page = String(text || "").replace(/(^|[\s(])(\S)/g, function (m, sp, ch) { return sp + ch.toUpperCase(); });
+  document.title = page ? "doo-wops! | " + page : "doo-wops!";
 }
 
 export async function postJson(path, body) {

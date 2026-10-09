@@ -59,16 +59,28 @@ body::before {
 #banner { flex: 1; overflow: hidden; }
 #banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-#datebar { display: flex; height: 26px; font: bold 13px Verdana, Geneva, Tahoma, sans-serif; }
-#date { width: 230px; flex: none; background: #b5d333; display: flex; align-items: center; justify-content: center; }
+/* winamp.com 2004: a tab bar in the accent colour with the current tab in
+   white, then a dark strip underneath */
+#tabs {
+  display: flex; align-items: flex-end; gap: 2px;
+  padding: 6px 10px 0;
+  background: linear-gradient(#cfe57a, #b5d333 60%, #a3c22a);
+  border-top: 1px solid #8ca33c;
+}
+#tabs a, #tabs span[data-tab] {
+  display: block; padding: 5px 14px 6px;
+  font: bold 13px Verdana, Geneva, Tahoma, sans-serif; color: #0d0d0d; text-decoration: none;
+  border-radius: 5px 5px 0 0;
+}
+#tabs a:hover { background: rgba(255,255,255,.45); }
+#tabs .on, #tabs .on:hover { background: #fff; color: #0d0d0d; }
+#tab-status { margin-left: auto; padding: 0 0 6px; font: bold 12px Verdana, Geneva, Tahoma, sans-serif; color: #0d0d0d; }
+
+#datebar { display: flex; height: 24px; font: bold 12px Verdana, Geneva, Tahoma, sans-serif; background: #0d0d0d; }
+#date { width: 230px; flex: none; color: #fff; display: flex; align-items: center; justify-content: center; border-right: 1px solid #333; }
 #ticker { flex: 1; background: #0d0d0d; color: #b5d333; display: flex; align-items: center; overflow: hidden; }
 #ticker marquee { width: 100%; }
 
-#topnav { display: none; background: #0d0d0d; border-top: 1px solid #333; padding: 4px 10px; font: bold 13px Verdana, Geneva, Tahoma, sans-serif; }
-#topnav a { color: #fff; margin-right: 14px; text-decoration: none; }
-#topnav a:hover { text-decoration: underline; }
-#topnav-status { color: #b5d333; float: right; }
-body.in-game #topnav { display: block; }
 body.in-game #left { display: none; }
 body.in-game #header { height: 90px; }
 
@@ -86,22 +98,83 @@ body.in-game #header { height: 90px; }
   border-radius: 0 999px 999px 0;
   color: #fff;
 }
+/* light paint splatter on the empty left side of each pill (winamp.com style) */
+.pill { position: relative; }
+.pill::before {
+  content: ""; position: absolute; left: 8px; top: -3px; bottom: -3px; width: 96px;
+  pointer-events: none;
+}
+.pill-lime::before {
+  background:
+    radial-gradient(circle at 6% 50%, rgba(255,255,255,0.6) 0 4px, transparent 4.5px),
+    radial-gradient(circle at 15% 20%, rgba(255,255,255,0.5) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 22% 75%, rgba(255,255,255,0.5) 0 2.5px, transparent 3.0px),
+    radial-gradient(circle at 33% 40%, rgba(255,255,255,0.45) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 42% 85%, rgba(255,255,255,0.45) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 53% 15%, rgba(255,255,255,0.4) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 62% 60%, rgba(255,255,255,0.35) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 74% 30%, rgba(255,255,255,0.3) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 85% 72%, rgba(255,255,255,0.3) 0 1.5px, transparent 2.0px);
+}
+.pill-teal::before {
+  background:
+    radial-gradient(circle at 10% 25%, rgba(255,255,255,0.55) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 14% 62%, rgba(255,255,255,0.5) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 20% 35%, rgba(255,255,255,0.5) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 26% 80%, rgba(255,255,255,0.4) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 48% 20%, rgba(255,255,255,0.5) 0 3.5px, transparent 4.0px),
+    radial-gradient(circle at 55% 55%, rgba(255,255,255,0.45) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 60% 30%, rgba(255,255,255,0.4) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 70% 78%, rgba(255,255,255,0.35) 0 2.5px, transparent 3.0px),
+    radial-gradient(circle at 90% 40%, rgba(255,255,255,0.3) 0 1px, transparent 1.5px);
+}
+.pill-blue::before {
+  background:
+    radial-gradient(circle at 8% 40%, rgba(255,255,255,0.55) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 14% 78%, rgba(255,255,255,0.45) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 23% 22%, rgba(255,255,255,0.5) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 31% 62%, rgba(255,255,255,0.5) 0 2.5px, transparent 3.0px),
+    radial-gradient(circle at 40% 34%, rgba(255,255,255,0.4) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 47% 82%, rgba(255,255,255,0.4) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 57% 48%, rgba(255,255,255,0.4) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 68% 20%, rgba(255,255,255,0.3) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 78% 66%, rgba(255,255,255,0.3) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 90% 38%, rgba(255,255,255,0.25) 0 1px, transparent 1.5px);
+}
+.pill-green::before {
+  background:
+    radial-gradient(circle at 4% 30%, rgba(255,255,255,0.5) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 11% 75%, rgba(255,255,255,0.5) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 19% 45%, rgba(255,255,255,0.45) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.45) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 38% 60%, rgba(255,255,255,0.5) 0 4px, transparent 4.5px),
+    radial-gradient(circle at 50% 85%, rgba(255,255,255,0.4) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 58% 35%, rgba(255,255,255,0.4) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 72% 65%, rgba(255,255,255,0.35) 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 88% 25%, rgba(255,255,255,0.3) 0 2px, transparent 2.5px);
+}
 .pill-lime { background: #b5d333; color: #0d0d0d; }
 .pill-teal { background: #2ebed6; }
 .pill-blue { background: #2a61d1; }
 .pill-green { background: #009b36; }
 
 .side-links { padding: 5px 14px 10px; }
-.side-links a, .side-links span { display: block; color: #2a61d1; text-decoration: underline; }
-.side-links span { cursor: default; }
+.side-links a { display: block; color: #2a61d1; text-decoration: underline; }
 
-.updatelog { max-height: 300px; overflow-y: auto; margin: 4px 10px 10px; font-size: 12px; line-height: 1.35; }
-.updatelog .entry { padding: 6px 0; border-bottom: 1px dotted #999; }
-.updatelog .entry:last-child { border-bottom: 0; }
-.updatelog .date { background: #b5d333; font: bold 11px Verdana, Geneva, Tahoma, sans-serif; padding: 0 4px; }
-.updatelog .new { background: #cc0000; color: #fff; font: bold 11px Verdana, Geneva, Tahoma, sans-serif; padding: 0 3px; }
-.updatelog .title { font-weight: bold; color: #6f8a1e; margin-top: 2px; }
-.updatelog ul { margin: 2px 0 0; padding-left: 16px; }
+/* update log, after SpaceHey's Announcements box */
+.news { margin: 6px 10px 10px; border: 1px solid #8ca33c; background: #fff; }
+.news-list { max-height: 330px; overflow-y: auto; padding: 0 6px; }
+.news-item { display: flex; gap: 6px; align-items: flex-start; padding: 8px 0; border-bottom: 1px dotted #c9dd87; }
+.news-item:last-child { border-bottom: 0; }
+.news-item img { width: 40px; height: auto; flex: none; margin-top: 2px; }
+.news-date { font-size: 10px; color: #777; }
+.news-new { color: #cc0000; font-weight: bold; }
+.news-title { display: block; font: bold 13px/1.25 Verdana, Geneva, Tahoma, sans-serif; color: #2a61d1; text-decoration: none; margin: 1px 0 2px; }
+a.news-title:hover { text-decoration: underline; }
+.news-item p { font-size: 11px; line-height: 1.35; color: #111; margin: 0 0 3px; }
+.news-more { font: bold 11px Verdana, Geneva, Tahoma, sans-serif; color: #2a61d1; text-decoration: none; }
+.news-more::before { content: "\00bb\00a0"; color: #cc0000; }
+.news-more:hover { text-decoration: underline; }
 
 .adbar { background: #0d0d0d; display: flex; justify-content: flex-end; align-items: center; gap: 3px; padding: 3px 5px; }
 .adbar span { width: 14px; height: 14px; border-radius: 50%; background: #888; }
@@ -129,7 +202,7 @@ body.in-game #header { height: 90px; }
 #footer { background: #0d0d0d; color: #fff; padding: 6px 10px 10px; }
 #footer .copy { text-align: right; font-size: 12px; }
 #footer .footlinks { background: #fff; color: #000; width: fit-content; margin: 6px auto; padding: 3px 16px; border-radius: 999px; }
-#footer .footlinks span { color: #2a61d1; text-decoration: underline; }
+#footer .footlinks a { color: #2a61d1; }
 
 .btnwall { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 8px 0; }
 .btnwall img { width: 150px; height: 20px; display: block; image-rendering: pixelated; }
@@ -138,20 +211,62 @@ body.in-game #header { height: 90px; }
 
 .h { font: bold 18px/1.2 Verdana, Geneva, Tahoma, sans-serif; margin: 2px 0 8px; }
 
-.box { border: 1px solid #8ca33c; background: #fff; margin: 0 0 8px; }
+/* sections, after winamp.com 2004: a dark title bar with a bold white title
+   (and an optional link on the right), over a light warm-grey panel */
+.box { border: 1px solid #0d0d0d; background: #efeee8; margin: 0 0 8px; }
 .box-head {
-  background: #d6e89a;
-  border-bottom: 1px solid #8ca33c;
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: linear-gradient(#333 0%, #1a1a1a 50%, #0d0d0d 100%);
+  border-bottom: 2px solid #b5d333;
+  color: #fff;
   font: bold 13px/1.3 Verdana, Geneva, Tahoma, sans-serif;
-  padding: 3px 8px;
+  padding: 4px 8px;
 }
+.box-head a, .box-head .more { position: relative; z-index: 1; color: #b5d333; font-size: 12px; text-decoration: none; }
+.box-head.no-splat::after { content: none; }
+/* counts and links sit on a dark patch so the splatter goes behind them */
+.box-head .more, .box-head a:not(.yt-link) { background: #141414; padding: 1px 6px; border-radius: 2px; }
+
+/* winamp.com 2004 paint splatter: lime splats on the title bar, and a few
+   dark ones flicked above the box's top corner */
+.box { position: relative; }
+.box-head { position: relative; }
+.box-head::after {
+  content: ""; position: absolute; top: -5px; bottom: -4px; right: 4px; width: 110px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 55%, #b5d333 0 4px, transparent 4.5px),
+    radial-gradient(circle at 22% 25%, #8ca33c 0 2px, transparent 2.5px),
+    radial-gradient(circle at 30% 70%, #b5d333 0 2.5px, transparent 3px),
+    radial-gradient(circle at 41% 40%, #cfe57a 0 1.5px, transparent 2px),
+    radial-gradient(circle at 48% 80%, #8ca33c 0 3px, transparent 3.5px),
+    radial-gradient(circle at 58% 20%, #b5d333 0 1.5px, transparent 2px),
+    radial-gradient(circle at 66% 60%, #6f8a1e 0 2px, transparent 2.5px),
+    radial-gradient(circle at 77% 35%, #b5d333 0 1px, transparent 1.5px),
+    radial-gradient(circle at 88% 72%, #8ca33c 0 1.5px, transparent 2px);
+  opacity: .85;
+}
+.box::before {
+  content: ""; position: absolute; top: -9px; left: 4px; width: 70px; height: 10px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 8% 70%, #0d0d0d 0 3px, transparent 3.5px),
+    radial-gradient(circle at 20% 30%, #0d0d0d 0 1.5px, transparent 2px),
+    radial-gradient(circle at 34% 60%, #333 0 2px, transparent 2.5px),
+    radial-gradient(circle at 47% 20%, #0d0d0d 0 1px, transparent 1.5px),
+    radial-gradient(circle at 60% 75%, #333 0 1.5px, transparent 2px);
+}
+.box-head a:hover { text-decoration: underline; }
 .box-body { padding: 8px 10px; }
 .box-body > :last-child { margin-bottom: 0; }
 
 .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
 .cols-votes { display: grid; grid-template-columns: 3fr 2fr; gap: 8px; align-items: start; }
 .row-between { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
-.turn-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 12px; }
+.room-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; margin: 0 0 6px; }
+.room-head .h { margin: 0; }
+.room-head .btn { margin: 0; }
+.room-head-right { display: flex; align-items: center; gap: 12px; }
 
 .small { font-size: 12px; color: #555; }
 .center { text-align: center; }
@@ -165,36 +280,66 @@ body.in-game #header { height: 90px; }
 
 .field { display: block; margin: 0 0 8px; }
 .label { display: block; font: bold 12px Verdana, Geneva, Tahoma, sans-serif; margin-bottom: 2px; }
-.txt { font: 14px Verdana, Geneva, sans-serif; padding: 3px 5px; border: 1px solid #7f9db9; background: #fff; color: #000; }
-.txt:focus { outline: 2px solid #b5d333; outline-offset: 0; }
+.txt { font: 14px Verdana, Geneva, sans-serif; padding: 3px 5px; border: 1px solid #abadb3; border-top-color: #8e8f8f; border-radius: 2px; background: #fff; color: #000; }
+.txt:focus { outline: none; border-color: #3d7bad; border-top-color: #5794bf; }
 .txt.code { width: 110px; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; }
 .txt.invite { width: 58%; min-width: 180px; font-size: 12px; }
 
 .pick-row { display: block; padding: 2px 0; cursor: pointer; }
 .pick-custom { margin: 2px 0 0 20px; }
 
+/* buttons, after winamp.com 2004's DOWNLOAD buttons: small, rounded,
+   glossy (light top half, dark bottom half), bold capitals */
 .btn {
   display: inline-block;
-  font: bold 12px Verdana, Geneva, Tahoma, sans-serif;
-  padding: 3px 10px;
+  font: bold 11px Verdana, Geneva, Tahoma, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  padding: 4px 11px;
   margin: 0 3px 3px 0;
-  color: #000;
-  background: #f4f4f0;
-  border: 1px solid #7a8a5a;
+  color: #fff;
+  background: linear-gradient(#5a5a5a 0%, #3a3a3a 49%, #1d1d1d 50%, #0d0d0d 100%);
+  border: 1px solid #000;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3);
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
 }
-.btn:hover { background: #fff; color: #000; }
-.btn:active { background: #e4e4dc; }
-.btn:disabled, .btn.is-off { opacity: .45; cursor: default; }
-.btn-go { background: #b5d333; border-color: #6f8a1e; }
-.btn-go:hover { background: #c6e04a; }
-.btn-red { background: #cc0000; border-color: #800; color: #fff; }
-.btn-red:hover { background: #e01010; color: #fff; }
-.btn-big { font-size: 14px; padding: 5px 16px; }
-.btn.is-on { background: #8ca33c; color: #fff; }
+.btn:hover { color: #b5d333; background: linear-gradient(#6a6a6a 0%, #474747 49%, #262626 50%, #141414 100%); }
+.btn:active, .btn.is-on { box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
+.btn:focus-visible { outline: 2px solid #b5d333; outline-offset: 1px; }
+.btn:disabled, .btn.is-off {
+  color: #999; cursor: default; box-shadow: none;
+  background: linear-gradient(#e6e6e6, #cfcfcf); border-color: #aaa;
+}
+.btn-go { color: #0d0d0d; background: linear-gradient(#eaf7b0 0%, #cfe57a 49%, #b5d333 50%, #93b51c 100%); border-color: #4a6110; box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+.btn-go:hover { color: #0d0d0d; background: linear-gradient(#f3fbcf 0%, #dbee8f 49%, #c4e04a 50%, #a3c22a 100%); }
+.btn-go.is-on { background: linear-gradient(#b5d333, #8ca33c); }
+.btn-red { color: #fff; background: linear-gradient(#ee6a63 0%, #d6312a 49%, #b50000 50%, #8c0000 100%); border-color: #4d0000; }
+.btn-red:hover { color: #fff; background: linear-gradient(#f5837d 0%, #e04540 49%, #c80a0a 50%, #9e0000 100%); }
+.btn-big { font-size: 13px; padding: 6px 16px; }
+/* "watch on YouTube": just the logo, no button around it */
+.yt-link { display: block; line-height: 0; }
+.yt-link img { height: 22px; width: auto; display: block; }
+.yt-link:hover img { opacity: .85; }
 .btn.wide { display: block; width: 100%; text-align: center; }
+/* a doo-wops icon faded into the button behind its label */
+.btn-ic { position: relative; isolation: isolate; overflow: hidden; }
+.btn-ic::before {
+  content: ""; position: absolute; z-index: -1;
+  right: -6px; top: 50%; width: 64px; height: 64px; transform: translateY(-50%);
+  background: center / contain no-repeat;
+  opacity: .22;
+}
+.btn.wide.btn-ic::before { width: 90px; height: 90px; right: 4px; }
+.ic-create::before { background-image: url("/icons/stars-speakers.png"); }
+.ic-join::before { background-image: url("/icons/dots-rings.png"); }
+.ic-start::before { background-image: url("/icons/speakers-wide.png"); }
+.btn-ic.btn-big { padding-right: 34px; }
+.btn-row { display: flex; flex-wrap: nowrap; gap: 6px; }
+.btn-row .btn { margin: 0; }
+.btn.wide.btn-ic { padding-right: 16px; }
 .push-right { float: right; }
 .controls { overflow: hidden; margin-bottom: 4px; }
 
@@ -209,7 +354,10 @@ body.in-game #header { height: 90px; }
 .tbl .seatno { width: 26px; font-weight: bold; color: #6f8a1e; }
 .tbl .empty { color: #888; font-style: italic; }
 .tbl.plain td { border: 0; padding: 2px 8px 2px 0; }
-.on { color: #009b36; font-size: 12px; }
+.on { color: #009b36; font-size: 12px; white-space: nowrap; }
+/* spinning "online" CD, after a SpaceHey layout by Fren-z (layouts.spacehey.com/layout?id=83117) */
+.online { width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; animation: rotation 6s infinite linear; }
+@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
 .away { color: #c47a00; font-size: 12px; }
 
 .steps { margin: 0; padding-left: 20px; }
@@ -243,10 +391,47 @@ body.in-game #header { height: 90px; }
 .loading { display: flex; align-items: center; gap: 8px; color: #555; }
 
 .gifstrip { overflow: hidden; margin: 0 0 8px; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 2px 0; }
-.gifstrip-track { display: flex; gap: 4px; width: max-content; animation: gifscroll 40s linear infinite; }
-.gifstrip:hover .gifstrip-track { animation-play-state: paused; }
-.gifstrip img { width: 150px; height: 20px; display: block; image-rendering: pixelated; }
+.gifstrip-track { display: flex; align-items: center; gap: 4px; width: max-content; animation: gifscroll 70s linear infinite; }
+.gifstrip img { display: block; image-rendering: pixelated; } /* natural size: 150x20 and 88x31 badges */
 @keyframes gifscroll { to { transform: translateX(-50%); } }
+
+/* ── MySpace 2006-08 bits ──────────────────────────────────────────────── */
+
+/* "Get Started" row: four boxed columns, bold title, a line, a link bottom-right */
+.getstarted { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #6f8a1e; background: #e6f1bd; margin: 0 0 8px; }
+.getstarted > div { display: flex; flex-direction: column; padding: 6px 8px; border-left: 1px solid #6f8a1e; }
+.getstarted > div:first-child { border-left: 0; }
+/* framed photo above each column, like MySpace's video thumbnails */
+.gs-photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: center 20%; border: 1px solid #999; padding: 2px; background: #fff; margin: 0 0 6px; }
+.getstarted b { color: #2a61d1; font-size: 13px; }
+.getstarted p { flex: 1; font-size: 12px; margin: 2px 0 6px; }
+.getstarted a { align-self: flex-end; font-size: 12px; text-decoration: none; }
+.getstarted a:hover { text-decoration: underline; }
+
+/* dotted rule between the two columns, like MySpace's centre divider */
+.cols2 > div:first-child { padding-right: 8px; border-right: 2px dotted #c9dd87; }
+
+/* the doo-wops icons (cut from ELEMENTS/doo_wops_icons.png), sprinkled around */
+.deco { display: block; height: auto; pointer-events: none; }
+.deco-right { float: right; width: 120px; margin: -4px -4px 4px 10px; }
+.deco-left { float: left; width: 40px; margin: 0 8px 0 0; }
+.deco-sm { width: 84px; }
+.box-body { position: relative; }
+.deco-corner { position: absolute; right: 6px; bottom: 6px; width: 70px; }
+/* keep the small notes clear of a corner icon */
+.box-body:has(.deco-corner) .small { display: inline-block; padding-right: 76px; }
+.deco-xs { width: 40px; }
+.deco-inline { display: inline-block; width: 90px; vertical-align: middle; margin-left: 6px; }
+.deco-center { width: 130px; margin: 0 auto 6px; }
+.deco-side { width: 180px; margin: 10px auto; }
+.box-body::after { content: ""; display: block; clear: both; }
+
+/* work-in-progress page: the 2000s "under construction" look */
+.wip { text-align: center; padding: 0 0 14px; }
+.wip-stripe { height: 14px; margin: 0 0 14px; background: repeating-linear-gradient(-45deg, #ffd800 0 14px, #0d0d0d 14px 28px); }
+.wip-stripe:last-child { margin: 14px 0 -14px; }
+.wip-icon { display: block; width: 150px; margin: 0 auto 6px; }
+.wip-big { font: bold 26px Verdana, Geneva, Tahoma, sans-serif; letter-spacing: 1px; margin: 0 0 6px; }
 
 /* ── video ──────────────────────────────────────────────────────────────── */
 
@@ -282,7 +467,7 @@ body.in-game #header { height: 90px; }
 
 /* ── iPod radio (after andisarchive.neocities.org) ──────────────────────── */
 
-.radio { display: flex; justify-content: flex-start; margin: 0 0 8px; }
+.radio { display: flex; justify-content: flex-start; }
 .ipod {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 14px;
@@ -312,14 +497,18 @@ body.in-game #header { height: 90px; }
 .w-menu { top: 8px; left: 50%; transform: translateX(-50%); }
 .w-prev { left: 6px; top: 50%; transform: translateY(-50%); }
 .w-next { right: 6px; top: 50%; transform: translateY(-50%); }
-.w-play { bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 10px !important; }
+/* the small play/pause under the centre: drawn in CSS so the two halves line up */
+.w-play { bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; }
+.i-tri { display: block; width: 0; height: 0; border-style: solid; border-width: 4px 0 4px 6px; border-color: transparent transparent transparent currentColor; }
+.i-bars { display: block; width: 6px; height: 8px; border-left: 2px solid currentColor; border-right: 2px solid currentColor; box-sizing: border-box; }
 .ipod-wheel .w-center {
   left: 50%; top: 50%; width: 50px; height: 50px; transform: translate(-50%, -50%);
   border-radius: 50%; border: 1px solid #b4b4b4;
   background: linear-gradient(#f3f3f3, #cfcfcf);
 }
-.ipod-wheel .w-center::after { content: ""; position: absolute; left: 20px; top: 15px; border-style: solid; border-width: 10px 0 10px 15px; border-color: transparent transparent transparent #444; }
-.ipod.is-playing .w-center::after { left: 17px; top: 16px; width: 5px; height: 18px; border: 0; border-left: 5px solid #444; border-right: 5px solid #444; padding-right: 6px; box-sizing: content-box; }
+.ipod-wheel .w-center::after { content: ""; position: absolute; left: 20px; top: 14px; border-style: solid; border-width: 10px 0 10px 15px; border-color: transparent transparent transparent #444; }
+/* pause: two equal bars, centred in the button */
+.ipod.is-playing .w-center::after { left: 16px; top: 15px; width: 16px; height: 18px; border: 0; background: linear-gradient(to right, #444 0 6px, transparent 6px 10px, #444 10px 16px); }
 
 /* ── small screens ──────────────────────────────────────────────────────── */
 
@@ -330,5 +519,7 @@ body.in-game #header { height: 90px; }
   #left, #right, #main { width: 100%; }
   #left { display: none; }
   .cols2, .cols-votes { grid-template-columns: 1fr; }
+  .cols2 > div:first-child { padding-right: 0; border-right: 0; }
+  .getstarted { grid-template-columns: 1fr 1fr; }
   .ipod { flex-wrap: wrap; justify-content: center; }
 }
