@@ -1,48 +1,193 @@
-/* ── iPod radio (after andisarchive.neocities.org) ──────────────────────── */
+/* ── doo-wops Radio: an iPod, after the theme in /RADIO (ui_1-3.png) ──────────
+   Silver body, black bezel, a 480x360 screen drawn at its real theme size and
+   scaled to fit (ipod.js sets --s), and a white click wheel. Inside the
+   screen everything follows the theme: Tahoma Bold, white text, the orange
+   wallpapers, the dark selection bar with an orange arrow, #ffad72 selected
+   text and a yellow progress bar. (Orange is the theme's, not doo-wops lime.)
+   Assets: public/ipod/. */
 
-.radio { display: flex; justify-content: flex-start; align-items: flex-end; gap: 10px; }
-/* dancing silhouettes (sticker sheet) in the space beside the iPod */
-.dancers { flex: 1; display: flex; justify-content: space-around; align-items: flex-end; min-width: 0; }
-.dancers img { width: 30%; max-width: 120px; height: auto; opacity: .85; }
-.dancers img:nth-child(2) { margin-bottom: 18px; }
+.radio { display: flex; justify-content: center; padding: 12px 10px 16px; }
+
+/* the body, on its side like the old radio: screen left, click wheel right.
+   Change --screen to make the whole iPod bigger or smaller. */
 .ipod {
-  display: flex; align-items: center; gap: 14px;
-  padding: 12px 14px;
-  background: linear-gradient(#fafafa, #d8d8d8);
-  border: 1px solid #a8a8a8;
-  border-radius: 18px;
+  --screen: 320px;
+  position: relative;
+  display: flex; align-items: center; gap: 24px;
+  padding: 16px 26px 16px 16px;
+  border: 1px solid #9a9a9a;
+  border-radius: 26px;
+  background: linear-gradient(160deg, #f4f4f4 0%, #dcdcdc 38%, #c4c4c4 100%);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -3px 6px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.35);
+  user-select: none;
+  outline: none;
 }
-.ipod-screen { width: 190px; background: #dfe7ee; border: 4px solid #2b2b2b; border-radius: 4px; color: #111; }
-.ipod-np { font: bold 10px Verdana, Geneva, Tahoma, sans-serif; text-align: center; background: linear-gradient(#f4f8fb, #b9c7d3); border-bottom: 1px solid #8c9aa6; padding: 1px 4px; }
-.ipod-np span { color: #555; }
-.ipod-face { position: relative; width: 120px; height: 120px; margin: 8px auto 4px; background: #fff; border: 1px solid #8c9aa6; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.ipod-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #fff; z-index: 1; }
-.ipod-player { position: absolute; inset: 0; overflow: hidden; }
-.ipod-player iframe { position: absolute; left: -40px; top: -40px; width: 200px; height: 200px; border: 0; pointer-events: none; }
-.ipod-face .spinner { position: absolute; z-index: 2; }
-.ipod-meta { font-size: 11px; text-align: center; padding: 0 6px 6px; height: 40px; overflow: hidden; }
-.ipod-song { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ipod-artist { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #444; }
+/* a faint diagonal sheen across the metal */
+.ipod::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, transparent 52%, rgba(255,255,255,.28) 53%, transparent 75%);
+}
+.ipod:focus-visible { box-shadow: 0 0 0 2px #b5d333, 0 2px 8px rgba(0,0,0,.35); }
 
-.ipod-wheel {
-  position: relative; width: 140px; height: 140px; border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, #ececec 60%, #d2d2d2 100%);
-  border: 1px solid #b4b4b4;
+.ipod-bezel {
+  position: relative; width: var(--screen); flex: none;
+  padding: 7px;
+  background: #0d0d0d;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px #000;
 }
-.ipod-wheel button { position: absolute; background: none; border: 0; color: #777; font: bold 11px Verdana, Geneva, Tahoma, sans-serif; cursor: pointer; padding: 4px; }
-.ipod-wheel button:hover { color: #000; }
-.w-menu { top: 8px; left: 50%; transform: translateX(-50%); }
-.w-prev { left: 6px; top: 50%; transform: translateY(-50%); }
-.w-next { right: 6px; top: 50%; transform: translateY(-50%); }
-/* the small play/pause under the centre: drawn in CSS so the two halves line up */
-.w-play { bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; }
-.i-tri { display: block; width: 0; height: 0; border-style: solid; border-width: 4px 0 4px 6px; border-color: transparent transparent transparent currentColor; }
-.i-bars { display: block; width: 6px; height: 8px; border-left: 2px solid currentColor; border-right: 2px solid currentColor; box-sizing: border-box; }
-.ipod-wheel .w-center {
-  left: 50%; top: 50%; width: 50px; height: 50px; transform: translate(-50%, -50%);
-  border-radius: 50%; border: 1px solid #b4b4b4;
-  background: linear-gradient(#f3f3f3, #cfcfcf);
+.ipod-fit { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 4px; background: #000; }
+
+/* ── the screen: drawn at 480x360, scaled to the bezel ── */
+
+.lcd {
+  position: absolute; left: 0; top: 0; width: 480px; height: 360px;
+  transform: scale(var(--s, 1)); transform-origin: 0 0;
+  overflow: hidden; background: #000; color: #fff;
+  font: bold 20px/1.2 Tahoma, Verdana, Geneva, sans-serif;
+  text-shadow: 0 1px 2px rgba(0,0,0,.55);
+  filter: brightness(var(--bright, 1)); /* Settings > Brightness */
+  transition: filter .6s;
 }
-.ipod-wheel .w-center::after { content: ""; position: absolute; left: 20px; top: 14px; border-style: solid; border-width: 10px 0 10px 15px; border-color: transparent transparent transparent #444; }
-/* pause: two equal bars, centred in the button */
-.ipod.is-playing .w-center::after { left: 16px; top: 15px; width: 16px; height: 18px; border: 0; background: linear-gradient(to right, #444 0 6px, transparent 6px 10px, #444 10px 16px); }
+/* backlight off after a while (Settings > Backlight); any input wakes it */
+.lcd.dim { filter: brightness(calc(var(--bright, 1) * .3)); }
+
+/* Settings > Shutdown: a black screen; any button shows the logo, then wakes */
+.lcd.off::after, .lcd.boot::after { content: ""; position: absolute; inset: 0; z-index: 6; background: #000; }
+.lcd.boot::after { background: #000 url("/brand/logo.png") center / 220px auto no-repeat; animation: boot 1.3s ease-out forwards; }
+@keyframes boot {
+  0% { opacity: 1; background-size: 160px auto; }
+  70% { opacity: 1; background-size: 220px auto; }
+  100% { opacity: 0; background-size: 220px auto; }
+}
+
+/* the confirm box (theme dialog: white box, grey option, orange selected one) */
+.dialog { position: absolute; inset: 0; z-index: 5; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; }
+.dlg-box { width: 300px; padding: 20px 18px 18px; background: #fff; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.6); text-align: center; }
+.dlg-text { color: #222; text-shadow: none; font-size: 22px; margin-bottom: 18px; }
+.dlg-opts { display: flex; justify-content: center; gap: 16px; }
+.dlg-opt { width: 110px; height: 46px; line-height: 46px; font-size: 19px; background: url("/ipod/dlg-opt.png") 0 0 / 100% 100%; }
+.dlg-opt.sel { background-image: url("/ipod/dlg-opt-sel.png"); }
+
+/* the YouTube player: under the cover art, or the whole screen in Videos */
+.lcd-player { position: absolute; z-index: 0; left: 18px; top: 52px; width: 200px; height: 200px; background: #000; }
+.lcd-player iframe { display: block; width: 100%; height: 100%; border: 0; pointer-events: none; }
+.lcd.video .lcd-player { z-index: 2; left: 0; top: 30px; width: 480px; height: 330px; }
+
+.lcd-views { position: absolute; inset: 0; z-index: 1; }
+.view {
+  position: absolute; inset: 0;
+  background: #000 0 0 / 480px 360px no-repeat;
+  transition: transform .3s cubic-bezier(.2, .7, .3, 1);
+}
+.view.no-anim { transition: none; }
+.v-home { background-image: url("/ipod/bg-home.png"); }
+.v-list, .v-np { background-image: url("/ipod/bg-now.png"); }
+.v-settings { background-image: url("/ipod/bg-settings.png"); }
+
+/* status bar: screen title on the left, play state + battery on the right */
+.lcd-status {
+  position: absolute; z-index: 3; left: 0; top: 0; right: 0; height: 30px;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+  font-size: 18px;
+  background: linear-gradient(#4a4a4a 0%, #262626 50%, #111 51%, #0d0d0d 100%);
+  border-bottom: 1px solid #000;
+}
+.st-right { display: flex; align-items: center; gap: 6px; font-size: 16px; }
+.st-right img { display: block; }
+
+.lcd-spin { position: absolute; z-index: 4; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+
+/* ── menus ── */
+
+.list { position: absolute; left: 0; top: 37px; width: 215px; height: 323px; overflow: hidden; } /* a little gap under the status bar */
+.v-list .list { width: 100%; }
+.v-settings .list { width: 250px; }
+.list-inner { transition: transform .12s ease-out; }
+.row {
+  position: relative; height: 45px; line-height: 45px;
+  padding: 0 30px 0 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.row.sel { background: url("/ipod/sel.png") 0 0 / 100% 100% no-repeat; color: #ffad72; }
+.row.sel.more::after {
+  content: ""; position: absolute; right: 10px; top: 9px; width: 10px; height: 27px;
+  background: url("/ipod/arrow.png") center / contain no-repeat;
+}
+.row.off { color: #ccc; }
+.row .val { position: absolute; right: 12px; top: 0; }
+
+/* home: big icon of the selected item on the right, pops in when it changes */
+.preview { position: absolute; left: 272px; top: 72px; width: 170px; height: 170px; }
+.preview img { width: 100%; height: 100%; animation: pop .25s ease-out; }
+@keyframes pop {
+  0% { transform: scale(.82); opacity: .2; }
+  65% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* settings: the selected setting's name and icon on the right */
+.set-panel { position: absolute; left: 250px; right: 0; top: 52px; text-align: center; font-size: 18px; }
+.set-panel img { display: block; width: 110px; height: 110px; margin: 22px auto 0; animation: pop .25s ease-out; }
+
+/* ── Now Playing: tilted cover art, song details, progress ── */
+
+.np-art { position: absolute; left: 18px; top: 52px; width: 200px; height: 200px; perspective: 600px; }
+.np-art img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transform: rotateY(16deg); transform-origin: left center;
+  box-shadow: 6px 6px 12px rgba(0,0,0,.55);
+}
+.np-info { position: absolute; left: 240px; right: 14px; top: 50px; }
+.marq { overflow: hidden; white-space: nowrap; }
+.marq > span { display: inline-block; }
+/* long titles slide back and forth like the real thing */
+.marq.scroll > span { animation: ticker 7s ease-in-out infinite alternate; }
+@keyframes ticker {
+  0%, 18% { transform: translateX(0); }
+  82%, 100% { transform: translateX(var(--d)); }
+}
+.np-title { font-size: 26px; }
+.np-artist { font-size: 20px; margin-top: 12px; }
+.np-album { font-size: 18px; margin-top: 14px; color: #ffe2cc; }
+.np-count { font-size: 18px; margin-top: 14px; }
+.np-bar { position: absolute; left: 18px; right: 18px; top: 292px; height: 3px; background: #fff; }
+.np-fill { height: 100%; width: 0; background: #ffcc30; }
+/* scrub mode (centre button): a diamond on the bar */
+.v-np.scrub .np-fill { position: relative; }
+.v-np.scrub .np-fill::after {
+  content: ""; position: absolute; right: -6px; top: -5px; width: 9px; height: 9px;
+  background: #ffcc30; transform: rotate(45deg); box-shadow: 0 0 0 1px #000;
+}
+.np-time { position: absolute; left: 18px; right: 18px; top: 304px; display: flex; justify-content: space-between; font-size: 16px; }
+/* volume (turn the wheel on Now Playing): the bar shows the volume for a moment */
+.v-np.vol .np-fill { background: #fff; }
+.v-np.vol .np-bar { background: rgba(255,255,255,.35); height: 8px; top: 290px; }
+.np-vol-label { display: none; }
+.v-np.vol .np-vol-label { display: block; }
+.v-np.vol .np-times { display: none; }
+
+/* ── the click wheel ── */
+
+.wheel {
+  position: relative; width: 170px; flex: none; aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 38%, #fff 0%, #f7f7f7 55%, #e2e2e2 100%);
+  box-shadow: 0 1px 2px rgba(0,0,0,.28), inset 0 -2px 5px rgba(0,0,0,.08);
+  touch-action: none; cursor: grab;
+}
+.wheel:active { cursor: grabbing; }
+.wheel-ic { position: absolute; width: 8%; color: #4d4d4d; transition: color .08s, transform .08s; pointer-events: none; }
+.wheel-ic svg { display: block; width: 100%; height: auto; }
+.wheel-ic.down { color: #000; transform: scale(.85); }
+.ic-menu { left: 46%; top: 8%; }
+.ic-prev { left: 9%; top: 46%; }
+.ic-next { right: 9%; top: 46%; }
+.ic-play { left: 45.5%; bottom: 8%; width: 9%; }
+.wheel-center {
+  position: absolute; left: 31%; top: 31%; width: 38%; height: 38%;
+  border: 0; border-radius: 50%; padding: 0; cursor: pointer;
+  background: radial-gradient(circle at 50% 35%, #dadada 0%, #c6c6c6 70%, #b9b9b9 100%);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.22), 0 1px 0 #fff;
+}
+.wheel-center.down { background: #b6b6b6; box-shadow: inset 0 2px 6px rgba(0,0,0,.4); }

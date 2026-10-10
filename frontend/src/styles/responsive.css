@@ -10,4 +10,5 @@
   .cols2 > div:first-child { padding-right: 0; border-right: 0; }
   .getstarted { grid-template-columns: 1fr 1fr; }
   .ipod { flex-wrap: wrap; justify-content: center; }
+  .ipod-bezel { width: min(var(--screen), 100%); }
 }

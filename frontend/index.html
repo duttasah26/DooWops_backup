@@ -144,29 +144,30 @@
         <div class="box" id="radio">
           <div class="box-head">doo-wops Radio</div>
           <div class="box-body radio">
-            <div id="ipod" class="ipod">
-              <div class="ipod-screen">
-                <div class="ipod-np">NOW PLAYING <span id="ipod-mode">shuffle</span></div>
-                <div class="ipod-face">
-                  <!-- the YouTube player sits under the album art: on screen but hidden -->
-                  <div class="ipod-player"><div id="ipod-player"></div></div>
-                  <img id="ipod-art" class="ipod-art" src="/brand/logo.png" alt="">
-                  <span id="ipod-spin" class="spinner" hidden></span>
+            <!-- doo-wops Radio: an iPod, after the theme in /RADIO (ipod.js draws
+                 the screens). The YouTube player lives inside the screen, under the
+                 cover art (or full screen in Videos). -->
+            <div id="ipod" class="ipod" tabindex="0" aria-label="doo-wops Radio iPod">
+              <div class="ipod-bezel">
+                <div class="ipod-fit" id="ipod-fit">
+                  <div class="lcd" id="ipod-lcd">
+                    <div class="lcd-player" id="ipod-player-box"><div id="ipod-player"></div></div>
+                    <div class="lcd-views" id="ipod-views"></div>
+                    <div class="lcd-status">
+                      <span class="st-title" id="ipod-title">Home</span>
+                      <span class="st-right"><img id="ipod-state" src="/ipod/st-pause.png" alt="" hidden><img id="ipod-bat" src="/ipod/bat4.png" alt=""><span id="ipod-bat-pct">100%</span></span>
+                    </div>
+                    <span class="lcd-spin spinner" id="ipod-spin" hidden></span>
+                  </div>
                 </div>
-                <div class="ipod-meta" id="ipod-meta"><div class="ipod-song">doo-wops!</div><div class="ipod-artist">press play</div></div>
               </div>
-              <div class="ipod-wheel">
-                <button class="w-menu" data-ipod="menu" title="new shuffle">MENU</button>
-                <button class="w-prev" data-ipod="prev" title="previous song">&#9664;&#9664;</button>
-                <button class="w-next" data-ipod="next" title="next song">&#9654;&#9654;</button>
-                <button class="w-play" data-ipod="play" title="play / pause"><i class="i-tri"></i><i class="i-bars"></i></button>
-                <button class="w-center" data-ipod="play" title="play / pause"></button>
+              <div class="wheel" id="ipod-wheel">
+                <span class="wheel-ic ic-menu" title="back"><svg viewBox="0 0 16 16"><path d="M5 3 2 6l3 3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 6H10a3.5 3.5 0 0 1 0 7H6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span>
+                <span class="wheel-ic ic-prev" title="previous"><svg viewBox="0 0 16 16"><path d="M2 3h1.6v10H2zM9 3v10L3.6 8zM15 3v10L9.6 8z" fill="currentColor"/></svg></span>
+                <span class="wheel-ic ic-next" title="next"><svg viewBox="0 0 16 16"><path d="M12.4 3H14v10h-1.6zM1 3v10l5.4-5zM7 3v10l5.4-5z" fill="currentColor"/></svg></span>
+                <span class="wheel-ic ic-play" title="play / pause"><svg viewBox="0 0 18 16"><path d="M1 3v10l7-5z" fill="currentColor"/><path d="M10 4h7v8h-7z" fill="currentColor"/></svg></span>
+                <button class="wheel-center" id="ipod-center" title="select"></button>
               </div>
-            </div>
-            <div class="dancers">
-              <img src="/stickers/dancer1.png" alt="">
-              <img src="/stickers/dancer0.png" alt="">
-              <img src="/stickers/dancer2.png" alt="">
             </div>
           </div>
         </div>
