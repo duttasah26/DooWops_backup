@@ -1,12 +1,5 @@
-/* base: fonts, reset, links
-   Verdana for everything; Retro Display only on the sidebar pills. */
-
-@font-face {
-  font-family: "Retro Display";
-  src: url("/fonts/BarlowCondensed-BoldItalic.ttf") format("truetype");
-  font-weight: 700;
-  font-style: italic;
-}
+/* base: reset, links. Verdana for everything; the sidebar pills are GIFs
+   with Retro Display baked in (tools/make_pills.py). */
 
 * { box-sizing: border-box; }
 
