@@ -1,0 +1,26 @@
+/* base: fonts, reset, links
+   Verdana for everything; Retro Display only on the sidebar pills. */
+
+@font-face {
+  font-family: "Retro Display";
+  src: url("/fonts/BarlowCondensed-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font: 13px/1.4 Verdana, Geneva, Tahoma, sans-serif;
+  color: #111;
+  background: #000;
+  overflow-x: hidden;
+}
+
+a { color: #2a61d1; }
+a:hover { color: #1a0dab; }
+p { margin: 0 0 8px; }
+img { border: 0; }
+[hidden] { display: none !important; }

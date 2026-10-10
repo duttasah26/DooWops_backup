@@ -46,6 +46,7 @@ export function openRoom(roomCode, roomToken, options) {
   setTitle("joining room " + code);
   if (!root.dataset.wired) {
     root.addEventListener("click", onClick);
+    document.getElementById("tab-status").addEventListener("click", onClick); // the invite link button
     root.dataset.wired = "1";
   }
   connect();
@@ -153,8 +154,8 @@ function personLabel(p) {
 
 function presence(p) {
   return p.connected
-    ? '<span class="on"><img class="online" src="/icons/online-cd.png" alt="">online</span>'
-    : '<span class="away">away</span>';
+    ? '<img class="online" src="/icons/online-cd.png" alt="online" title="online">'
+    : '<span class="away" title="away">away</span>'; // to be swapped for the afk / disconnected gif
 }
 
 function seatName(n) {
@@ -177,15 +178,16 @@ function render(s) {
 
   document.body.classList.toggle("in-game", next !== "lobby");
   var p1 = s.seats["1"], p2 = s.seats["2"];
-  document.getElementById("tab-status").textContent =
-    next === "lobby" ? (p1 && p2 ? "ready to start" : "waiting for players") : seatName(1) + " vs " + seatName(2);
+  // top right of the tab bar: the link for inviting people to watch
+  var link = location.origin + location.pathname + "?room=" + s.code;
+  setRegion("tab-status", '<button class="btn" data-act="copy" data-text="' + esc(link) + '">Copy invite link</button>');
 
   if (next === "lobby") renderLobby(s, p1, p2);
   else if (next === "game") renderGame(s);
   else renderVotes(s);
 }
 
-var LEAVE = '<button class="btn btn-red" data-act="leave">Leave room</button>';
+var LEAVE = '<button class="btn btn-red no-fx" data-act="leave">Leave room</button>'; // no hover effects
 
 var SKELETONS = {
   lobby:
@@ -194,21 +196,21 @@ var SKELETONS = {
     '<div class="box"><div class="box-head">Invite Your Friends</div><div class="box-body" id="r-invite"></div></div>' +
     '<div class="cols2">' +
     "<div>" +
-    '<div class="box"><div class="box-head no-splat">Players <span class="more" id="r-seatcount"></span></div><div id="r-seats"></div></div>' +
-    '<div class="box"><div class="box-head no-splat">Watching <span class="more" id="r-wcount"></span></div><div id="r-watchers"></div></div>' +
-    '<div class="box"><div class="box-head no-splat">Room Settings</div><form class="box-body" id="r-settings" onsubmit="return false"></form></div>' +
+    '<div class="box no-blimp"><div class="box-head no-splat">Players</div><div id="r-seats"></div></div>' +
+    '<div class="box no-blimp"><div class="box-head no-splat">Watching</div><div id="r-watchers"></div></div>' +
+    '<div class="box no-blimp"><div class="box-head no-splat">Room Settings</div><form class="box-body" id="r-settings" onsubmit="return false"></form></div>' +
     "</div>" +
     "<div>" +
-    '<div class="box"><div class="box-head">Start The Game</div><div class="box-body" id="r-start"></div></div>' +
-    '<div class="box"><div class="box-head">How To Play</div><div class="box-body">' + HOW_TO_PLAY + "</div></div>" +
+    '<div class="box no-blimp"><div class="box-head">Start The Game</div><div class="box-body" id="r-start"></div></div>' +
+    '<div class="box no-blimp"><div class="box-head">How To Play</div><div class="box-body">' + HOW_TO_PLAY + "</div></div>" +
     "</div>" +
     "</div>",
 
   game:
     '<div class="room-head"><h2 class="h" id="g-heading"></h2><span class="room-head-right"><b id="g-round"></b>' + LEAVE + "</span></div>" +
-    '<div class="box"><div class="box-head" id="g-title">Now Playing</div><div class="video" id="g-video"></div></div>' +
-    '<div class="box"><div class="box-body" id="g-controls"></div></div>' +
-    '<div class="box"><div class="box-head">In The Room</div><div class="box-body" id="g-people"></div></div>',
+    '<div class="box no-blimp"><div class="video" id="g-video"></div></div>' +
+    '<div class="box no-blimp"><div class="box-body" id="g-controls"></div></div>' +
+    '<div class="box no-blimp"><div class="box-head">In The Audience</div><div id="g-people"></div></div>',
 
   votes:
     '<div class="room-head"><h2 class="h" id="v-heading"></h2>' + LEAVE + "</div>" +
@@ -238,9 +240,7 @@ function renderLobby(s, p1, p2) {
   var rows = [1, 2].map(function (n) {
     var p = s.seats[n];
     var actions = "";
-    if (!p) {
-      return "<tr><td class=\"seatno\">" + n + "</td><td class=\"empty\">empty seat</td><td></td><td></td></tr>";
-    }
+    if (!p) return "";
     if (p.id === you.id) actions = act({ type: "watch" }, "Watch instead");
     else if (you.is_host) {
       actions =
@@ -248,11 +248,10 @@ function renderLobby(s, p1, p2) {
         act({ type: "make_host", member_id: p.id }, "Make host") +
         act({ type: "kick", member_id: p.id }, "Kick", "btn-red");
     }
-    return "<tr><td class=\"seatno\">" + n + "</td><td>" + personLabel(p) + "</td><td>" + presence(p) + "</td><td class=\"acts\">" + actions + "</td></tr>";
+    return "<tr><td>" + personLabel(p) + "</td><td>" + presence(p) + "</td><td class=\"acts\">" + actions + "</td></tr>";
   });
-  setRegion("r-seats", '<table class="tbl">' + rows.join("") + "</table>");
-  setRegion("r-seatcount", ((p1 ? 1 : 0) + (p2 ? 1 : 0)) + " of 2 seats");
-  setRegion("r-wcount", s.watchers.length + " watching");
+  rows = rows.join("");
+  setRegion("r-seats", rows ? '<table class="tbl">' + rows + "</table>" : "");
 
   // watchers: one seat button that takes whichever seat is free
   var freeSeat = !s.seats[1] ? 1 : !s.seats[2] ? 2 : 0;
@@ -270,7 +269,7 @@ function renderLobby(s, p1, p2) {
   });
   setRegion(
     "r-watchers",
-    w.length ? '<table class="tbl">' + w.join("") + "</table>" : '<div class="box-body small">Nobody is watching yet. Anyone who joins after the seats fill up watches and votes.</div>'
+    w.length ? '<table class="tbl">' + w.join("") + "</table>" : "" // left empty: a gif goes here later
   );
 
   // settings (host edits; everyone else reads)
@@ -281,8 +280,7 @@ function renderLobby(s, p1, p2) {
     setRegion(
       "r-settings",
       '<div class="field"><div class="label">playlist</div>' + playlistPickerHtml("room-pl", st.playlist_id) + "</div>" +
-        '<div class="field"><label class="label" for="room-rounds">rounds</label> <select id="room-rounds" class="txt">' + opts + "</select>" +
-        ' <span class="small">(the last round has 5 songs)</span></div>' +
+        '<div class="field"><label class="label" for="room-rounds">rounds</label> <select id="room-rounds" class="txt">' + opts + "</select></div>" +
         '<button class="btn" data-act="save-settings">Save settings</button>'
     );
   } else {
@@ -299,7 +297,7 @@ function renderLobby(s, p1, p2) {
     "r-start",
     you.is_host
       ? '<img class="deco deco-center" src="/icons/equalizer.png" alt="">' +
-        '<button class="btn btn-go btn-big wide btn-ic ic-start" data-act="send" data-msg=\'{"type":"start"}\'' + (p1 && p2 ? "" : " disabled") + ">Start game</button>" +
+        '<button class="btn btn-go btn-big wide btn-ic ic-start' + (p1 && p2 ? "" : " is-off") + '" data-act="send" data-msg=\'{"type":"start"}\'>Start game</button>' +
           (p1 && p2 ? "" : '<div class="small center">needs two players in the seats</div>')
       : '<img class="deco deco-center" src="/icons/equalizer.png" alt="">' +
           "Waiting for " + esc(host ? host.name : "the host") + " to start the game."
@@ -316,22 +314,33 @@ function renderGame(s) {
 
   setTitle((myTurn ? "your turn" : activeName + " is picking") + " (round " + g.round + " of " + g.num_rounds + ")");
   setRegion("g-heading", myTurn ? esc(activeName) + ", it's your turn!" : esc(activeName) + " is picking...");
-  setRegion("g-round", "round " + g.round + " of " + g.num_rounds + (isFinal ? " (final round, 5 songs)" : ""));
-  setRegion("g-title", track ? esc(trackTitle(track)) : "now playing");
+  setRegion("g-round", "Round " + g.round + "/" + g.num_rounds);
   setVideo("g-video", track && track.youtube_video_id, true);
 
-  var status = g.loading ? '<span class="loading"><span class="spinner"></span> getting songs</span>' : g.error ? esc(g.error) : "song " + (g.index + 1) + " of " + g.choices.length;
-  var counts = esc(seatName(1)) + ": " + g.picks["1"].length + "/" + g.num_rounds + " picked &nbsp;|&nbsp; " +
-    esc(seatName(2)) + ": " + g.picks["2"].length + "/" + g.num_rounds + " picked";
+  // song n of 3 (or 5): a row of numbered boxes, heard ones filled, current one lit
+  var pips = "";
+  for (var i = 0; i < g.choices.length; i++) {
+    pips += '<span class="pip' + (i < g.index ? " heard" : i === g.index ? " now" : "") + '">' + (i + 1) + "</span>";
+  }
+  var status = g.loading ? '<span class="loading"><span class="spinner"></span> getting songs</span>' : g.error ? esc(g.error) : '<span class="pips">' + pips + "</span>";
+  // each player's latest pick: "sahil picked Song Name" (a blank until they've picked)
+  var lastPick = function (n) {
+    var list = g.picks[String(n)];
+    var t = list[list.length - 1];
+    return "<b>" + esc(seatName(n)) + "</b> picked " + (t ? "<i>" + esc(t.name) + "</i>" : "___");
+  };
+  var counts = lastPick(1) + " &nbsp;|&nbsp; " + lastPick(2);
 
   var controls;
   if (myTurn && !g.loading) {
     var nextLabel = g.active === 1 ? esc(seatName(2)) + "'s turn" : isFinal ? "Finish and vote" : "Next round";
     controls =
-      act({ type: "pick" }, "Pick this song", "btn-go btn-big" + (g.picked || !track ? " is-off" : "")) +
+      '<div class="pick-btns">' +
+      act({ type: "pick" }, "Pick this song", "btn-go btn-big btn-ic ic-pick" + (g.picked || !track ? " is-off" : "")) +
       act({ type: "next" }, "Next song", "btn-big" + (g.index >= g.choices.length - 1 ? " is-off" : "")) +
       (g.can_go_back ? act({ type: "back" }, isFinal ? "Go back (once)" : "Go back", "btn-big") : "") +
-      (g.picked ? act({ type: "advance" }, nextLabel, "btn-go btn-big push-right") : "");
+      "</div>" +
+      (g.picked ? '<div class="pick-btns">' + act({ type: "advance" }, nextLabel, "btn-go btn-big") + "</div>" : "");
   } else {
     controls = "<b>" + (you.seat ? "Waiting for " + esc(activeName) + " to pick. You're listening along." : "You're watching. " + esc(activeName) + " is picking.") + "</b>";
   }
@@ -340,16 +349,14 @@ function renderGame(s) {
   setRegion(
     "g-controls",
     '<div class="row-between"><span>' + status + "</span><span>" + counts + "</span></div>" +
-      '<div class="controls">' + controls + retry + "</div>" +
-      (g.picked ? "<div>" + (myTurn ? "You picked" : "They picked") + " <b>" + esc(g.picked.name) + "</b>.</div>" : "")
+      '<div class="controls">' + controls + retry + "</div>"
   );
 
-  var watchers = s.watchers.map(function (p) { return esc(p.name) + (p.connected ? "" : " (away)"); });
-  setRegion(
-    "g-people",
-    "playing: <b>" + esc(seatName(1)) + "</b> vs <b>" + esc(seatName(2)) + "</b>" +
-      " &nbsp;|&nbsp; watching: " + (watchers.length ? watchers.join(", ") : "nobody")
-  );
+  // the audience: everyone watching (left empty when nobody is)
+  var watchers = s.watchers.map(function (p) {
+    return "<tr><td>" + personLabel(p) + "</td><td>" + presence(p) + "</td></tr>";
+  });
+  setRegion("g-people", watchers.length ? '<table class="tbl">' + watchers.join("") + "</table>" : "");
 }
 
 function renderVotes(s) {
@@ -463,10 +470,11 @@ function onClick(e) {
     setTimeout(function () { if (!stopped) { stop(); clearToken(code); hooks.onExit && hooks.onExit(); } }, 800);
   } else if (what === "copy") {
     var text = el.dataset.text;
+    var label = el.textContent;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(function () {
         el.textContent = "Copied";
-        setTimeout(function () { el.textContent = "Copy link"; }, 1500);
+        setTimeout(function () { el.textContent = label; }, 1500);
       }, function () {});
     }
   } else if (what === "save-settings") {

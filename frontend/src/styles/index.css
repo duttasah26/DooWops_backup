@@ -1,0 +1,20 @@
+/* doo-wops! styles, one file per part of the page, written like it's 2007.
+   Verdana for everything (the standard web font of the time), and Retro
+   Display only on the coloured sidebar pills from DESIGN/image.png.
+   Boxes are flat like MySpace 2007: a coloured header strip, a 1px border,
+   tight padding, no rounded corners or drop shadows. */
+
+@import "./base.css";
+@import "./background.css";
+@import "./scrollbars.css";
+@import "./layout.css";
+@import "./sidebar.css";
+@import "./footer.css";
+@import "./boxes.css";
+@import "./forms.css";
+@import "./buttons.css";
+@import "./loader.css";
+@import "./home.css";
+@import "./room.css";
+@import "./ipod.css";
+@import "./responsive.css";

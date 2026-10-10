@@ -1,0 +1,77 @@
+/* ── buttons: winamp.com-style glossy buttons, the faded icon behind the label,
+   and the shapes that pop out on hover (hover.js) ── */
+
+/* soft, slightly blurry button text: a 1px blur in the text colour plus a faint halo */
+.btn { text-shadow: 0 0 1px currentColor, 0 0 6px rgba(255,255,255,.6); }
+/* lime buttons: crisp black text (no blur), just a white halo behind it */
+.btn-go { text-shadow: 0 0 4px rgba(255,255,255,.8); }
+
+/* buttons, after winamp.com 2004's DOWNLOAD buttons: small, rounded,
+   glossy (light top half, dark bottom half), bold capitals */
+.btn {
+  display: inline-block;
+  font: bold 11px Verdana, Geneva, Tahoma, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  padding: 4px 11px;
+  margin: 0 3px 3px 0;
+  color: #fff;
+  background: linear-gradient(#5a5a5a 0%, #3a3a3a 49%, #1d1d1d 50%, #0d0d0d 100%);
+  border: 1px solid #000;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3);
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+/* on hover: the text stays white with a brighter white glow, and a soft glow
+   comes on around the button */
+.btn:hover { color: #fff; text-shadow: 0 0 1px #fff, 0 0 6px #fff, 0 0 10px rgba(255,255,255,.7); background: linear-gradient(#6a6a6a 0%, #474747 49%, #262626 50%, #141414 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 5px rgba(181,211,51,.45); }
+.btn:active, .btn.is-on { box-shadow: inset 0 2px 3px rgba(0,0,0,.6); }
+.btn:focus-visible { outline: 2px solid #b5d333; outline-offset: 1px; }
+.btn:disabled, .btn.is-off {
+  color: #999; cursor: default; box-shadow: none;
+  background: linear-gradient(#e6e6e6, #cfcfcf); border-color: #aaa;
+}
+.btn.is-off:hover, .btn:disabled:hover { color: #999; text-shadow: 0 0 1px currentColor, 0 0 6px rgba(255,255,255,.6); background: linear-gradient(#e6e6e6, #cfcfcf); box-shadow: none; }
+.btn-go { color: #0d0d0d; background: linear-gradient(#eaf7b0 0%, #cfe57a 49%, #b5d333 50%, #93b51c 100%); border-color: #4a6110; box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+.btn-go:hover { color: #0d0d0d; background: linear-gradient(#f3fbcf 0%, #dbee8f 49%, #c4e04a 50%, #a3c22a 100%); text-shadow: 0 0 4px rgba(255,255,255,.8); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 6px 1px rgba(181,211,51,.6); }
+.btn-go.is-on { background: linear-gradient(#b5d333, #8ca33c); }
+.btn-red { color: #fff; background: linear-gradient(#ee6a63 0%, #d6312a 49%, #b50000 50%, #8c0000 100%); border-color: #4d0000; }
+.btn-red:hover { color: #fff; background: linear-gradient(#f5837d 0%, #e04540 49%, #c80a0a 50%, #9e0000 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 5px rgba(204,0,0,.45); }
+.btn-big { font-size: 13px; padding: 6px 16px; }
+/* "watch on YouTube": just the logo, no button around it */
+.yt-link { display: block; line-height: 0; }
+.yt-link img { height: 22px; width: auto; display: block; }
+.yt-link:hover img { opacity: .85; }
+.btn.wide { display: block; width: 100%; text-align: center; }
+/* a doo-wops icon faded into the button behind its label */
+.btn-ic { position: relative; isolation: isolate; overflow: hidden; }
+.btn-ic::before {
+  content: ""; position: absolute; z-index: -1;
+  right: -6px; top: 50%; width: 64px; height: 64px; transform: translateY(-50%);
+  background: center / contain no-repeat;
+  opacity: .22;
+}
+.btn.wide.btn-ic::before { width: 90px; height: 90px; right: 4px; }
+.ic-create::before { background-image: url("/icons/stars-speakers.png"); }
+.ic-join::before { background-image: url("/icons/dots-rings.png"); }
+.ic-start::before { background-image: url("/icons/speakers-wide.png"); }
+.ic-pick::before { background-image: url("/icons/equalizer-star.png"); }
+/* Leave room: no hover effects at all (no sparks either, see hover.js) */
+.btn-red.no-fx:hover { color: #fff; text-shadow: 0 0 1px currentColor, 0 0 6px rgba(255,255,255,.6); background: linear-gradient(#ee6a63 0%, #d6312a 49%, #b50000 50%, #8c0000 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
+.btn-row { display: flex; flex-wrap: nowrap; gap: 6px; }
+.btn-row .btn { margin: 0; }
+
+/* hover sparks around buttons */
+.spark { position: absolute; z-index: 70; pointer-events: none; height: auto; animation: spark 1s ease-out forwards; filter: drop-shadow(0 0 1px #0d0d0d) drop-shadow(0 0 3px rgba(181,211,51,.8)); }
+/* black sparks: brightness(0) turns the lime stars black too */
+.spark-x { filter: drop-shadow(0 0 1px #fff); }
+.spark-k { filter: brightness(0) drop-shadow(0 0 1px #b5d333) drop-shadow(0 0 2px rgba(255,255,255,.7)); }
+@keyframes spark {
+  0% { opacity: 0; transform: scale(.2) rotate(0deg); }
+  20% { opacity: 1; transform: scale(1.15) rotate(0deg); }
+  60% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1) rotate(var(--rot)); }
+}

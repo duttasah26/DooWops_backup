@@ -1,0 +1,46 @@
+/* ── page frame ─────────────────────────────────────────────────────────── */
+
+#page {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 100vh;
+}
+
+#header { display: flex; height: 140px; }
+#logo { width: 230px; flex: none; display: flex; align-items: center; justify-content: center; }
+#logo img { max-width: 100%; max-height: 100%; }
+#banner { flex: 1; overflow: hidden; }
+#banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* winamp.com 2004: a tab bar in the accent colour with the current tab in
+   white, then a dark strip underneath */
+#tabs {
+  display: none; align-items: flex-end; gap: 2px;
+  padding: 6px 10px 0;
+  background: linear-gradient(#cfe57a, #b5d333 60%, #a3c22a);
+  border-top: 1px solid #8ca33c;
+}
+#tabs a, #tabs span[data-tab] {
+  display: block; padding: 5px 14px 6px;
+  font: bold 13px Verdana, Geneva, Tahoma, sans-serif; color: #0d0d0d; text-decoration: none;
+  border-radius: 5px 5px 0 0;
+}
+#tabs a:hover { background: rgba(255,255,255,.45); }
+#tabs .on, #tabs .on:hover { background: #fff; color: #0d0d0d; }
+#tab-status { margin-left: auto; padding: 0 0 5px; }
+#tab-status .btn { margin: 0; }
+
+#datebar { display: flex; height: 24px; font: bold 12px Verdana, Geneva, Tahoma, sans-serif; background: #0d0d0d; }
+#date { width: 230px; flex: none; color: #fff; display: flex; align-items: center; justify-content: center; border-right: 1px solid #333; }
+#ticker { font-weight: normal; flex: 1; background: #0d0d0d; color: #b5d333; display: flex; align-items: center; overflow: hidden; }
+#ticker marquee { width: 100%; }
+
+body.in-game #left { display: none; }
+body.in-game #tabs { display: flex; }
+
+#cols { display: flex; align-items: flex-start; }
+#left { width: 230px; flex: none; padding-top: 8px; }
+#main { flex: 1; min-width: 0; padding: 8px; }
+#right { width: 220px; flex: none; padding-top: 8px; }

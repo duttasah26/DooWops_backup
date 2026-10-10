@@ -1,0 +1,60 @@
+/* ── home page: gif strips, Get Started row, deco icons, work-in-progress page ── */
+
+/* badge marquees between sections: a black outline with a lime line inside it */
+.gifstrip { overflow: hidden; margin: 0 0 8px; border: 1px solid #0d0d0d; box-shadow: inset 0 0 0 1px #b5d333; padding: 3px 2px; }
+.gifstrip-track { display: flex; align-items: center; gap: 4px; width: max-content; animation: gifscroll 70s linear infinite; }
+.gifstrip img { display: block; image-rendering: pixelated; } /* natural size: 150x20 and 88x31 badges */
+@keyframes gifscroll { to { transform: translateX(-50%); } }
+
+/* ── MySpace 2006-08 bits ──────────────────────────────────────────────── */
+
+/* "Get Started" row: four boxed columns, bold title, a line, a link bottom-right */
+/* "Get Started" row, after MySpace 2007: one bordered strip of pale
+   columns, bold blue titles, and a » link in the bottom-right corner */
+.getstarted { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid #6f8a1e; background: #eef6d2; margin: 0 0 8px; }
+.getstarted > div { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; padding: 6px 8px; border-left: 1px solid #6f8a1e; }
+.getstarted > div:nth-child(even) { background: #2b2d28; color: #eee; }
+.getstarted > div:nth-child(even) p { color: #e8e8e8; }
+.getstarted > div:nth-child(even) b, .getstarted > div:nth-child(even) a { color: #b5d333; }
+.getstarted > div::after {
+  content: ""; position: absolute; z-index: -1; left: -12px; bottom: -10px; width: 90px; height: 70px;
+  background: left bottom / contain no-repeat; opacity: .2;
+}
+.getstarted > div:nth-child(odd)::after { filter: brightness(.45); opacity: .3; }
+.getstarted > div:nth-child(1)::after { background-image: url("/stickers/combo0.png"); }
+.getstarted > div:nth-child(2)::after { background-image: url("/stickers/combo1.png"); }
+.getstarted > div:nth-child(3)::after { background-image: url("/stickers/combo2.png"); }
+.getstarted > div:nth-child(4)::after { background-image: url("/stickers/combo3.png"); }
+.getstarted > div:first-child { border-left: 0; }
+.gs-photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: center 20%; border: 1px solid #999; padding: 2px; background: #fff; margin: 0 0 6px; }
+.getstarted b { color: #2a61d1; font: bold 13px/1.2 Verdana, Geneva, Tahoma, sans-serif; }
+.getstarted p { flex: 1; font-size: 12px; margin: 2px 0 6px; color: #111; }
+.getstarted a { align-self: flex-end; font-size: 12px; color: #2a61d1; text-decoration: none; }
+.getstarted a::first-letter { color: #cc0000; }
+.getstarted a:hover { text-decoration: underline; }
+
+/* dotted rule between the two columns, like MySpace's centre divider */
+.cols2 > div:first-child { padding-right: 8px; border-right: 2px dotted #c9dd87; }
+
+/* the doo-wops icons (cut from ELEMENTS/doo_wops_icons.png), sprinkled around */
+.deco { display: block; height: auto; pointer-events: none; }
+.deco-right { float: right; width: 120px; margin: -4px -4px 4px 10px; }
+.deco-left { float: left; width: 40px; margin: 0 8px 0 0; }
+.deco-sm { width: 84px; }
+.box-body { position: relative; }
+.deco-corner { position: absolute; right: 6px; bottom: 6px; width: 70px; }
+/* keep the small notes clear of a corner icon */
+.box-body:has(.deco-corner) .small { display: inline-block; padding-right: 76px; }
+.deco-xs { width: 40px; }
+.deco-inline { display: inline-block; width: 90px; vertical-align: middle; margin-left: 6px; }
+.deco-center { width: 130px; margin: 0 auto 6px; }
+.deco-side { width: 180px; margin: 10px auto; }
+.box-body::after { content: ""; display: block; clear: both; }
+
+/* work-in-progress page: the 2000s "under construction" look */
+/* work-in-progress page, in the same style as the home boxes: one thin
+   lime/black "under construction" strip under the title bar, the text on the
+   left, and a doo-wops icon on the right */
+.wip-stripe { height: 6px; background: repeating-linear-gradient(-45deg, #b5d333 0 6px, #0d0d0d 6px 12px); }
+.wip { min-height: 150px; }
+.wip-big { font: bold 18px/1.2 Verdana, Geneva, Tahoma, sans-serif; margin: 6px 0 8px; }

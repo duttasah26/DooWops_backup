@@ -1,0 +1,9 @@
+/* ── footer ─────────────────────────────────────────────────────────────── */
+
+#footer { background: #0d0d0d; color: #fff; padding: 6px 10px 10px; }
+#footer .copy { text-align: right; font-size: 12px; }
+#footer .footlinks { background: #fff; color: #000; width: fit-content; margin: 6px auto; padding: 3px 16px; border-radius: 999px; }
+#footer .footlinks a { color: #2a61d1; }
+
+.btnwall { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 8px 0; }
+.btnwall img { width: 150px; height: 20px; display: block; image-rendering: pixelated; }

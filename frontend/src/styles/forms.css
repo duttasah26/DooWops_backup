@@ -1,0 +1,11 @@
+/* ── form bits ──────────────────────────────────────────────────────────── */
+
+.field { display: block; margin: 0 0 8px; }
+.label { display: block; font: bold 12px Verdana, Geneva, Tahoma, sans-serif; margin-bottom: 2px; }
+.txt { font: 14px Verdana, Geneva, sans-serif; padding: 3px 5px; border: 1px solid #abadb3; border-top-color: #8e8f8f; border-radius: 2px; background: #fff; color: #000; }
+.txt:focus { outline: none; border-color: #3d7bad; border-top-color: #5794bf; }
+.txt.code { width: 110px; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; }
+.txt.invite { width: 58%; min-width: 180px; font-size: 12px; }
+
+.pick-row { display: block; padding: 2px 0; cursor: pointer; }
+.pick-custom { margin: 2px 0 0 20px; }

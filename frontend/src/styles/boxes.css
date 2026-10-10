@@ -1,0 +1,72 @@
+/* ── boxes, MySpace 2007 style ──────────────────────────────────────────── */
+
+.h { font: bold 18px/1.2 Verdana, Geneva, Tahoma, sans-serif; margin: 2px 0 8px; }
+
+/* sections, after winamp.com 2004: a dark title bar with a bold white title
+   (and an optional link on the right), over a light warm-grey panel */
+.box { border: 1px solid #0d0d0d; background: #efeee8; margin: 0 0 8px; }
+.box-head {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: linear-gradient(#333 0%, #1a1a1a 50%, #0d0d0d 100%);
+  border-bottom: 2px solid #b5d333;
+  color: #fff;
+  font: bold 13px/1.3 Verdana, Geneva, Tahoma, sans-serif;
+  padding: 4px 8px;
+}
+.box-head a, .box-head .more { position: relative; z-index: 1; color: #b5d333; font-size: 12px; text-decoration: none; }
+.box-head.no-splat::after { content: none; }
+/* counts and links sit on a dark patch so the dots go behind them */
+.box-head .more, .box-head a:not(.yt-link) { background: #141414; padding: 1px 6px; border-radius: 2px; }
+
+/* section headers: halftone dots on the title bar, and a few dark paint
+   splats flicked above the box's top corner (winamp.com 2004) */
+.box { position: relative; }
+.box-head { position: relative; }
+.box-head::after {
+  /* Frutiger Metro / 2007 halftone: dots grow from pinpricks to full dots
+     towards the right edge (public/deco/halftone.svg) */
+  content: ""; position: absolute; top: 0; bottom: 2px; right: 0; width: 200px;
+  pointer-events: none;
+  background: url("/deco/halftone.svg") right center / auto 100% no-repeat;
+  filter: blur(0.8px); /* soft, out-of-focus dots */
+}
+.box::before {
+  /* the live site's zig-zag of dots (high, low, big, small), stretched wider;
+     the same on every box and it stays inside the gap above */
+  content: ""; position: absolute; top: -9px; left: 4px; width: 150px; height: 10px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 4% 70%, #0d0d0d 0 3px, transparent 3.5px),
+    radial-gradient(circle at 10% 30%, #0d0d0d 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 17% 60%, #333 0 2px, transparent 2.5px),
+    radial-gradient(circle at 24% 20%, #0d0d0d 0 1px, transparent 1.5px),
+    radial-gradient(circle at 31% 75%, #333 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 39% 35%, #0d0d0d 0 2.5px, transparent 3.0px),
+    radial-gradient(circle at 47% 65%, #0d0d0d 0 1px, transparent 1.5px),
+    radial-gradient(circle at 55% 25%, #333 0 2px, transparent 2.5px),
+    radial-gradient(circle at 63% 70%, #0d0d0d 0 1.5px, transparent 2.0px),
+    radial-gradient(circle at 71% 30%, #333 0 1px, transparent 1.5px),
+    radial-gradient(circle at 79% 60%, #0d0d0d 0 2px, transparent 2.5px),
+    radial-gradient(circle at 87% 25%, #0d0d0d 0 1px, transparent 1.5px),
+    radial-gradient(circle at 95% 70%, #333 0 1.5px, transparent 2.0px);
+}
+.box.no-blimp::before { content: none; }
+.box-head a:hover { text-decoration: underline; }
+.box-body { padding: 8px 10px; }
+.box-body > :last-child { margin-bottom: 0; }
+
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+.cols-votes { display: grid; grid-template-columns: 3fr 2fr; gap: 8px; align-items: start; }
+.row-between { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
+.room-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; margin: 0 0 10px; }
+.room-head .h { margin: 0; }
+.room-head .btn { margin: 0; }
+.room-head-right { display: flex; align-items: center; gap: 12px; }
+
+.small { font-size: 12px; color: #555; }
+.center { text-align: center; }
+.wide { width: 100%; }
+
+.flash { padding: 5px 8px; margin: 0 0 8px; border: 1px solid #8ca33c; background: #f2f8dc; font-weight: bold; }
+.flash.warn { border-color: #d6a700; background: #fff8d0; }
+.flash.error, .error { border: 1px solid #cc0000; background: #ffeaea; color: #900; padding: 5px 8px; font-weight: bold; margin: 0 0 8px; }

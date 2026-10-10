@@ -1,0 +1,13 @@
+/* ── small screens ──────────────────────────────────────────────────────── */
+
+@media (max-width: 820px) {
+  #header { height: 90px; }
+  #logo, #date { width: 140px; }
+  #cols { flex-direction: column; }
+  #left, #right, #main { width: 100%; }
+  #left { display: none; }
+  .cols2, .cols-votes { grid-template-columns: 1fr; }
+  .cols2 > div:first-child { padding-right: 0; border-right: 0; }
+  .getstarted { grid-template-columns: 1fr 1fr; }
+  .ipod { flex-wrap: wrap; justify-content: center; }
+}

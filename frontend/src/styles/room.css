@@ -1,0 +1,63 @@
+/* ── room screens: game controls, song boxes, tables, video, voting, winner pop-up ── */
+
+.push-right { float: right; }
+.controls { overflow: hidden; margin-bottom: 4px; }
+.pick-btns { display: flex; justify-content: center; gap: 6px; margin: 4px 0; }
+.pick-btns .btn { margin: 0; }
+/* song 1/3: numbered boxes, heard ones dark, the current one lime */
+.pips { display: inline-flex; gap: 3px; vertical-align: middle; }
+.pip { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font: bold 11px Verdana, Geneva, Tahoma, sans-serif; border: 1px solid #0d0d0d; background: #fff; color: #888; }
+.pip.heard { background: #2b2d28; color: #b5d333; }
+.pip.now { background: #b5d333; color: #0d0d0d; box-shadow: 0 0 4px rgba(181,211,51,.9); }
+
+/* ── tables ─────────────────────────────────────────────────────────────── */
+
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl td, .tbl th { padding: 4px 8px; border-bottom: 1px solid #e2e8cc; text-align: left; vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl th { background: #f2f8dc; font-size: 12px; }
+.tbl .acts { text-align: right; }
+.tbl .acts .btn { margin: 1px 0 1px 3px; padding: 2px 6px; font-size: 11px; }
+.tbl .seatno { width: 26px; font-weight: bold; color: #6f8a1e; }
+.tbl .empty { color: #888; font-style: italic; }
+.tbl.plain td { border: 0; padding: 2px 8px 2px 0; }
+.on { color: #009b36; font-size: 12px; white-space: nowrap; }
+/* spinning "online" CD, after a SpaceHey layout by Fren-z (layouts.spacehey.com/layout?id=83117) */
+.online { width: 16px; height: 16px; vertical-align: middle; margin-right: 4px; animation: rotation 6s infinite linear; }
+@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
+.away { color: #c47a00; font-size: 12px; }
+
+.steps { margin: 0; padding-left: 20px; }
+.steps li { margin-bottom: 3px; }
+
+/* ── video ──────────────────────────────────────────────────────────────── */
+
+.video { background: #000; line-height: 0; }
+.video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
+.novideo { aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center; color: #999; line-height: 1.4; }
+
+/* ── voting / scoreboard ────────────────────────────────────────────────── */
+
+.scoreline { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+.scoreline td { text-align: center; padding: 0 2px; }
+.scoreline .num { font-size: 40px; font-weight: bold; line-height: 1.1; width: 60px; }
+.scoreline .dash { font-size: 30px; font-weight: bold; color: #888; }
+.scoreline .who { font-weight: bold; word-break: break-word; }
+.winner-line { background: #0d0d0d; color: #b5d333; font-weight: bold; text-align: center; padding: 4px; margin-bottom: 6px; }
+
+.picks .rnd { width: 52px; text-align: center; font-weight: bold; color: #6f8a1e; }
+.picks .pick { width: 46%; }
+.picks .pick img { float: left; width: 64px; height: 48px; object-fit: cover; margin-right: 8px; border: 1px solid #999; }
+.picks .pick-text { overflow: hidden; }
+.picks .song { font-weight: bold; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picks .pick-vote { clear: both; padding-top: 4px; }
+.picks .pick.playing { background: #f2f8dc; }
+.picks .count { font-size: 16px; }
+
+/* the winner window: a 2007 pop-up */
+.modal-bg { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal { width: 380px; max-width: 100%; background: #fff; border: 2px solid #0d0d0d; }
+.modal-head { background: #0d0d0d; color: #b5d333; font: bold 13px Verdana, Geneva, Tahoma, sans-serif; padding: 4px 8px; }
+.modal-body { padding: 14px 16px; text-align: center; }
+.modal-winner { font: bold 26px/1.1 Verdana, Geneva, Tahoma, sans-serif; margin: 4px 0 8px; word-break: break-word; }
+.modal-btns { margin-top: 12px; }

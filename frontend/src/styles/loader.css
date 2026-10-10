@@ -1,0 +1,19 @@
+/* ── loading: the speaker cone thumping (same as the update log), used
+   everywhere something loads; .spinner is the one place to change it ────── */
+
+.spinner { display: inline-block; position: relative; width: 24px; height: 24px; vertical-align: middle; }
+.spinner::before {
+  content: ""; position: absolute; inset: 0;
+  background: url("/icons/speaker-cone.png") center / contain no-repeat;
+  animation: thump .5s infinite;
+}
+.spinner-big { width: 36px; height: 36px; }
+.loading { display: flex; align-items: center; gap: 8px; color: #555; }
+
+/* the speaker thump, also used by the update log icons */
+@keyframes thump {
+  0% { transform: scale(1); }
+  12% { transform: scale(1.16); }
+  28% { transform: scale(.96); }
+  42%, 100% { transform: scale(1); }
+}
