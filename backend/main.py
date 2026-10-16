@@ -1,15 +1,19 @@
+import asyncio
 import os
 import random
+from collections import OrderedDict
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from rooms import RoomManager
+from security import RateLimiter, client_ip, valid_playlist_id
 
 load_dotenv()
 
@@ -21,10 +25,50 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 # "https://doowops.vercel.app,http://localhost:5173".
 FRONTEND_URLS = [u.strip().rstrip("/") for u in FRONTEND_URL.split(",") if u.strip()]
 
-yt_playlist_cache: dict = {}  # { ytPlaylistId: {"tracks": [...], "expires_at": datetime} }
+# { ytPlaylistId: {"tracks": [...], "expires_at": datetime} }, oldest first
+yt_playlist_cache: OrderedDict = OrderedDict()
 CACHE_TTL = timedelta(hours=24)
+CACHE_MAX_PLAYLISTS = 50
+MAX_PLAYLIST_ITEMS = 500  # YouTube quota and memory: stop paging here
 
-app = FastAPI(title="DooWops API")
+limiters = {
+    "create": RateLimiter(5, 60),
+    "room": RateLimiter(20, 60),
+    "playlist": RateLimiter(10, 60),
+}
+
+
+def rate_limit(name: str):
+    def check(request: Request):
+        wait = limiters[name].check(client_ip(request.headers, request.client))
+        if wait:
+            raise HTTPException(status_code=429, detail="Too many requests. Try again shortly.", headers={"Retry-After": str(wait)})
+    return Depends(check)
+
+
+def check_playlist_id(playlist_id: str) -> str:
+    if not valid_playlist_id(playlist_id):
+        raise HTTPException(status_code=400, detail="That doesn't look like a YouTube playlist ID.")
+    return playlist_id
+
+
+async def housekeeping():
+    """Drop idle rooms and stale rate-limit entries even when nobody is creating rooms."""
+    while True:
+        await asyncio.sleep(60)
+        room_manager.purge_idle()
+        for limiter in limiters.values():
+            limiter.prune()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    task = asyncio.create_task(housekeeping())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="DooWops API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -96,9 +140,9 @@ async def fetch_all_yt_items(playlist_id: str) -> list:
             data = resp.json()
             all_items.extend(data.get("items", []))
             page_token = data.get("nextPageToken")
-            if not page_token:
+            if not page_token or len(all_items) >= MAX_PLAYLIST_ITEMS:
                 break
-    return all_items
+    return all_items[:MAX_PLAYLIST_ITEMS]
 
 
 async def get_youtube_tracks(playlist_id: str) -> list:
@@ -110,17 +154,23 @@ async def get_youtube_tracks(playlist_id: str) -> list:
         raw_items = cached["tracks"]
     else:
         raw_items = await fetch_all_yt_items(playlist_id)
+        for key in [k for k, v in yt_playlist_cache.items() if now >= v["expires_at"]]:
+            del yt_playlist_cache[key]
+        yt_playlist_cache.pop(playlist_id, None)
         yt_playlist_cache[playlist_id] = {"tracks": raw_items, "expires_at": now + CACHE_TTL}
+        while len(yt_playlist_cache) > CACHE_MAX_PLAYLISTS:
+            yt_playlist_cache.popitem(last=False)
 
     return [t for item in raw_items if (t := normalize_yt_track(item)) is not None]
 
 
-@app.get("/api/youtube-playlist/{playlist_id}")
+@app.get("/api/youtube-playlist/{playlist_id}", dependencies=[rate_limit("playlist")])
 async def get_youtube_playlist(
     playlist_id: str,
     count: int = Query(3, ge=1, le=20),
     exclude: str = Query(""),
 ):
+    check_playlist_id(playlist_id)
     exclude_ids = {e.strip() for e in exclude.split(",") if e.strip()} if exclude else set()
     normalized = await get_youtube_tracks(playlist_id)
     available = [t for t in normalized if t["id"] not in exclude_ids]
@@ -144,8 +194,11 @@ class JoinRoomBody(BaseModel):
     name: str = Field(min_length=1, max_length=24)
 
 
-@app.post("/api/rooms")
+@app.post("/api/rooms", dependencies=[rate_limit("create")])
 async def create_room(body: CreateRoomBody):
+    check_playlist_id(body.playlist_id.strip())
+    if room_manager.full():
+        raise HTTPException(status_code=503, detail="The server is full right now. Try again later.")
     # Load the playlist up front so a bad link fails here, not mid-game.
     try:
         tracks = await get_youtube_tracks(body.playlist_id.strip())
@@ -161,7 +214,7 @@ async def create_room(body: CreateRoomBody):
     return {"code": room.code, "token": host.token}
 
 
-@app.get("/api/rooms/{code}")
+@app.get("/api/rooms/{code}", dependencies=[rate_limit("room")])
 def get_room(code: str):
     room = room_manager.get(code)
     if not room:
@@ -176,7 +229,7 @@ def get_room(code: str):
     }
 
 
-@app.post("/api/rooms/{code}/join")
+@app.post("/api/rooms/{code}/join", dependencies=[rate_limit("room")])
 def join_room(code: str, body: JoinRoomBody):
     room = room_manager.get(code)
     if not room:

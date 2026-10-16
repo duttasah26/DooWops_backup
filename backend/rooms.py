@@ -26,10 +26,14 @@ from typing import Awaitable, Callable, Optional
 
 from fastapi import WebSocket
 
+from security import valid_playlist_id
+
 CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # no 0/O/1/I/L
 IDLE_ROOM_TTL = 2 * 60 * 60  # seconds a room with nobody connected is kept
 LEAVE_GRACE = 45  # seconds before a disconnected member is removed
 MAX_MEMBERS = 30
+MAX_ROOMS = 500
+SETTINGS_COOLDOWN = 5  # seconds between a member's settings changes
 
 TrackLoader = Callable[[str], Awaitable[list]]
 
@@ -128,6 +132,7 @@ class Member:
         self.name = name
         self.sockets: set = set()
         self.leave_task: Optional[asyncio.Task] = None
+        self.last_settings = 0.0
 
     @property
     def connected(self) -> bool:
@@ -290,7 +295,7 @@ class RoomManager:
             if code not in self.rooms:
                 return code
 
-    def _purge_idle(self) -> None:
+    def purge_idle(self) -> None:
         now = time.time()
         for code, room in list(self.rooms.items()):
             empty = not room.members or not any(m.connected for m in room.members.values())
@@ -298,11 +303,15 @@ class RoomManager:
                 del self.rooms[code]
 
     def create(self, host_name: str, playlist_id: str, playlist_name: str, num_rounds: int):
-        self._purge_idle()
+        self.purge_idle()
         room = Room(self._new_code(), playlist_id, playlist_name, num_rounds)
         host = room.add_member(host_name)
         self.rooms[room.code] = room
         return room, host
+
+    def full(self) -> bool:
+        self.purge_idle()
+        return len(self.rooms) >= MAX_ROOMS
 
     def get(self, code: str) -> Optional[Room]:
         return self.rooms.get(code.upper())
@@ -376,11 +385,19 @@ class RoomManager:
             # ── host: room management (lobby) ──
             if is_host and room.status == "lobby":
                 if kind == "settings":
+                    if time.monotonic() - me.last_settings < SETTINGS_COOLDOWN:
+                        await ws.send_json({"type": "error", "message": "Slow down a little before changing settings again."})
+                        return
+                    me.last_settings = time.monotonic()
                     rounds = msg.get("num_rounds")
                     if isinstance(rounds, int) and 2 <= rounds <= 10:
                         room.num_rounds = rounds
                     pid = msg.get("playlist_id")
                     if isinstance(pid, str) and pid.strip() and pid != room.playlist_id:
+                        if not valid_playlist_id(pid.strip()):
+                            await ws.send_json({"type": "error", "message": "That doesn't look like a YouTube playlist ID."})
+                            await room.broadcast()
+                            return
                         try:
                             tracks = await self.load_tracks(pid.strip())
                         except Exception:
