@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from rooms import RoomManager
-from security import RateLimiter, client_ip, valid_playlist_id
+from security import RateLimiter, clean_name, client_ip, parse_message, valid_playlist_id
 
 load_dotenv()
 
@@ -24,6 +24,11 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 # site and local dev can both be listed, e.g.
 # "https://doowops.vercel.app,http://localhost:5173".
 FRONTEND_URLS = [u.strip().rstrip("/") for u in FRONTEND_URL.split(",") if u.strip()]
+DEV = os.getenv("DOOWOPS_ENV") == "dev"
+WS_AUTH_TIMEOUT = 5  # seconds to send the auth message after connecting
+WS_MAX_BYTES = 65536
+WS_MESSAGES_PER_SECOND = 20
+WS_MAX_STRIKES = 5  # rate-limit hits before the connection is closed
 
 # { ytPlaylistId: {"tracks": [...], "expires_at": datetime} }, oldest first
 yt_playlist_cache: OrderedDict = OrderedDict()
@@ -194,8 +199,16 @@ class JoinRoomBody(BaseModel):
     name: str = Field(min_length=1, max_length=24)
 
 
+def checked_name(raw: str) -> str:
+    name = clean_name(raw)
+    if not name:
+        raise HTTPException(status_code=400, detail="Enter a name.")
+    return name[:24]
+
+
 @app.post("/api/rooms", dependencies=[rate_limit("create")])
 async def create_room(body: CreateRoomBody):
+    host_name = checked_name(body.name)
     check_playlist_id(body.playlist_id.strip())
     if room_manager.full():
         raise HTTPException(status_code=503, detail="The server is full right now. Try again later.")
@@ -209,7 +222,7 @@ async def create_room(body: CreateRoomBody):
     if len(tracks) < body.num_rounds * 2 * 3 + 2:
         raise HTTPException(status_code=400, detail="That playlist is too short for this many rounds")
     room, host = room_manager.create(
-        body.name.strip(), body.playlist_id.strip(), body.playlist_name.strip() or "custom playlist", body.num_rounds
+        host_name, body.playlist_id.strip(), body.playlist_name.strip() or "custom playlist", body.num_rounds
     )
     return {"code": room.code, "token": host.token}
 
@@ -232,34 +245,73 @@ def join_room(code: str, body: JoinRoomBody):
     room = room_manager.get(code)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
+    name = checked_name(body.name)
     if room.locked:
         raise HTTPException(status_code=403, detail="This room is locked. Ask the host to unlock it.")
-    member = room_manager.join(room, body.name.strip())
+    if room.name_taken(name):
+        raise HTTPException(status_code=409, detail="Someone in this room already has that name. Pick another.")
+    member = room_manager.join(room, name)
     if not member:
         raise HTTPException(status_code=409, detail="This room is full.")
     return {"code": room.code, "token": member.token}
 
 
+def origin_allowed(origin: Optional[str]) -> bool:
+    # Browsers always send Origin on WebSocket connects; CORS doesn't cover them.
+    if origin is None:
+        return DEV
+    return origin.rstrip("/") in FRONTEND_URLS
+
+
+async def read_auth_token(ws: WebSocket) -> Optional[str]:
+    """The seat token, from the first message ({"type": "auth", "token": ...}).
+    It is not read from the URL, where proxies and logs would record it."""
+    try:
+        msg = parse_message(await asyncio.wait_for(ws.receive_text(), WS_AUTH_TIMEOUT))
+    except (asyncio.TimeoutError, ValueError, WebSocketDisconnect, RuntimeError):
+        return None
+    return msg["token"] if msg["type"] == "auth" else None
+
+
 @app.websocket("/ws/rooms/{code}")
-async def room_socket(ws: WebSocket, code: str, token: Optional[str] = None):
+async def room_socket(ws: WebSocket, code: str):
     # Accept before closing so the browser receives our close code; closing
     # during the handshake only shows up as a generic failure (1006).
     await ws.accept()
+    if not origin_allowed(ws.headers.get("origin")):
+        await ws.close(code=4403)
+        return
     room = room_manager.get(code)
     if not room:
         await ws.close(code=4404)
         return
+    token = await read_auth_token(ws)
     me = room.member_for_token(token)
     if not me:
         await ws.close(code=4401)  # not (or no longer) a member: join again
         return
     await room_manager.connect(room, ws, me)
+    limiter = RateLimiter(WS_MESSAGES_PER_SECOND, 1)
+    strikes = 0
     try:
         while True:
-            msg = await ws.receive_json()
-            if isinstance(msg, dict):
+            text = await ws.receive_text()
+            if limiter.check("conn"):
+                strikes += 1
+                if strikes >= WS_MAX_STRIKES:
+                    await ws.close(code=1008)
+                    break
+                continue
+            try:
+                msg = parse_message(text)
+            except ValueError as e:
+                await ws.send_json({"type": "error", "message": str(e)})
+                continue
+            try:
                 await room_manager.handle(room, me, msg, ws)
-    except (WebSocketDisconnect, ValueError, RuntimeError):
+            except Exception:
+                await ws.send_json({"type": "error", "message": "Something went wrong with that action."})
+    except (WebSocketDisconnect, RuntimeError):
         pass
     finally:
         await room_manager.disconnect(room, ws, me)
@@ -267,4 +319,4 @@ async def room_socket(ws: WebSocket, code: str, token: Optional[str] = None):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True, ws_max_size=WS_MAX_BYTES)

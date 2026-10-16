@@ -170,6 +170,9 @@ class Room:
                 return m
         return None
 
+    def name_taken(self, name: str) -> bool:
+        return any(m.name.casefold() == name.casefold() for m in self.members.values())
+
     def seat_of(self, member_id: str) -> Optional[int]:
         for n, mid in self.seats.items():
             if mid == member_id:

@@ -53,8 +53,9 @@ export function openRoom(roomCode, roomToken, options) {
 }
 
 function connect() {
-  ws = new WebSocket(WS_URL + "/ws/rooms/" + encodeURIComponent(code) + "?token=" + encodeURIComponent(token));
+  ws = new WebSocket(WS_URL + "/ws/rooms/" + encodeURIComponent(code));
   ws.onopen = function () {
+    ws.send(JSON.stringify({ type: "auth", token: token })); // not in the URL, which gets logged
     retries = 0;
     showFlash("");
   };
