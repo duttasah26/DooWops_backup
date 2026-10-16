@@ -36,7 +36,7 @@
 /* dotted rule between the two columns, like MySpace's centre divider */
 .cols2 > div:first-child { padding-right: 8px; border-right: 2px dotted #c9dd87; }
 
-/* the doo-wops icons (cut from ELEMENTS/doo_wops_icons.png), sprinkled around */
+/* the doo-wops icons (cut from ELEMENTS/stickers/doo_wops_icons.png), sprinkled around */
 .deco { display: block; height: auto; pointer-events: none; }
 .deco-right { float: right; width: 120px; margin: -4px -4px 4px 10px; }
 .deco-left { float: left; width: 40px; margin: 0 8px 0 0; }

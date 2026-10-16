@@ -1,53 +1,103 @@
+import asyncio
 import os
 import random
-import base64
-import secrets
+from collections import OrderedDict
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Optional
-from urllib.parse import urlencode
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from rooms import RoomManager
+from security import RateLimiter, clean_name, client_ip, parse_message, valid_playlist_id
 
 load_dotenv()
 
-CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
-CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI", "http://localhost:5000/auth/callback")
 PORT = int(os.getenv("PORT", 5000))
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 # Sites allowed to call this API from the browser. Comma-separated, so the live
 # site and local dev can both be listed, e.g.
-# "https://doowops.vercel.app,http://localhost:5173". The first one is where the
-# Spotify login redirects back to.
+# "https://doowops.vercel.app,http://localhost:5173".
 FRONTEND_URLS = [u.strip().rstrip("/") for u in FRONTEND_URL.split(",") if u.strip()]
+DEV = os.getenv("DOOWOPS_ENV") == "dev"
+WS_AUTH_TIMEOUT = 5  # seconds to send the auth message after connecting
+WS_MAX_BYTES = 65536
+WS_MESSAGES_PER_SECOND = 20
+WS_MAX_STRIKES = 5  # rate-limit hits before the connection is closed
 
-if not CLIENT_ID or not CLIENT_SECRET:
-    raise RuntimeError("Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET in .env")
-
-# In-memory state (single-user, local dev)
-latest_token: Optional[str] = None
-latest_refresh_token: Optional[str] = None
-playlist_cache: dict = {}     # { playlistId: {"tracks": [...], "expires_at": datetime} }
-yt_playlist_cache: dict = {}  # { ytPlaylistId: {"tracks": [...], "expires_at": datetime} }
+# { ytPlaylistId: {"tracks": [...], "expires_at": datetime} }, oldest first
+yt_playlist_cache: OrderedDict = OrderedDict()
 CACHE_TTL = timedelta(hours=24)
+CACHE_MAX_PLAYLISTS = 50
+MAX_PLAYLIST_ITEMS = 500  # YouTube quota and memory: stop paging here
 
-app = FastAPI(title="DooWops API")
+limiters = {
+    "create": RateLimiter(5, 60),
+    "room": RateLimiter(20, 60),
+    "playlist": RateLimiter(10, 60),
+}
+
+
+def rate_limit(name: str):
+    def check(request: Request):
+        wait = limiters[name].check(client_ip(request.headers, request.client))
+        if wait:
+            raise HTTPException(status_code=429, detail="Too many requests. Try again shortly.", headers={"Retry-After": str(wait)})
+    return Depends(check)
+
+
+def check_playlist_id(playlist_id: str) -> str:
+    if not valid_playlist_id(playlist_id):
+        raise HTTPException(status_code=400, detail="That doesn't look like a YouTube playlist ID.")
+    return playlist_id
+
+
+async def housekeeping():
+    """Drop idle rooms and stale rate-limit entries even when nobody is creating rooms."""
+    while True:
+        await asyncio.sleep(60)
+        room_manager.purge_idle()
+        for limiter in limiters.values():
+            limiter.prune()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    task = asyncio.create_task(housekeeping())
+    yield
+    task.cancel()
+
+
+# The interactive docs are only served when DOOWOPS_ENV=dev.
+app = FastAPI(
+    title="DooWops API",
+    lifespan=lifespan,
+    docs_url="/docs" if DEV else None,
+    redoc_url="/redoc" if DEV else None,
+    openapi_url="/openapi.json" if DEV else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=FRONTEND_URLS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,  # no cookies are used
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 def fisher_yates_shuffle(lst: list) -> list:
@@ -56,25 +106,6 @@ def fisher_yates_shuffle(lst: list) -> list:
         j = random.randint(0, i)
         arr[i], arr[j] = arr[j], arr[i]
     return arr
-
-
-def get_basic_auth() -> str:
-    return "Basic " + base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
-
-
-def normalize_spotify_track(item: dict) -> Optional[dict]:
-    t = item.get("track") or item
-    if not t or not t.get("id"):
-        return None
-    return {
-        "id": f"spotify:track:{t['id']}",
-        "name": t["name"],
-        "artists": [{"name": a["name"]} for a in t.get("artists", [])],
-        "album": {"images": t.get("album", {}).get("images", [])},
-        "uri": t["uri"],
-        "preview_url": t.get("preview_url"),
-        "source": "spotify",
-    }
 
 
 def normalize_yt_track(item: dict) -> Optional[dict]:
@@ -106,52 +137,6 @@ def normalize_yt_track(item: dict) -> Optional[dict]:
     }
 
 
-async def refresh_access_token():
-    global latest_token, latest_refresh_token
-    if not latest_refresh_token:
-        raise HTTPException(status_code=401, detail="No refresh token — please log in again")
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            "https://accounts.spotify.com/api/token",
-            data={"grant_type": "refresh_token", "refresh_token": latest_refresh_token},
-            headers={"Authorization": get_basic_auth(), "Content-Type": "application/x-www-form-urlencoded"},
-        )
-    if resp.status_code != 200:
-        raise HTTPException(status_code=401, detail="Failed to refresh token")
-    body = resp.json()
-    latest_token = body["access_token"]
-    if body.get("refresh_token"):
-        latest_refresh_token = body["refresh_token"]
-
-
-async def fetch_all_spotify_tracks(playlist_id: str) -> list:
-    all_items = []
-    offset = 0
-    async with httpx.AsyncClient() as client:
-        while True:
-            resp = await client.get(
-                f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks",
-                params={
-                    "limit": 100,
-                    "offset": offset,
-                    "fields": "items(track(id,name,artists,album(images),uri,preview_url)),next",
-                },
-                headers={"Authorization": f"Bearer {latest_token}"},
-            )
-            if resp.status_code == 401:
-                raise httpx.HTTPStatusError("401", request=resp.request, response=resp)
-            resp.raise_for_status()
-            data = resp.json()
-            items = data.get("items", [])
-            if not items:
-                break
-            all_items.extend(items)
-            if not data.get("next"):
-                break
-            offset += 100
-    return all_items
-
-
 async def fetch_all_yt_items(playlist_id: str) -> list:
     if not YOUTUBE_API_KEY:
         raise HTTPException(status_code=503, detail="YOUTUBE_API_KEY not configured in .env")
@@ -176,102 +161,9 @@ async def fetch_all_yt_items(playlist_id: str) -> list:
             data = resp.json()
             all_items.extend(data.get("items", []))
             page_token = data.get("nextPageToken")
-            if not page_token:
+            if not page_token or len(all_items) >= MAX_PLAYLIST_ITEMS:
                 break
-    return all_items
-
-
-# ── Auth routes ──────────────────────────────────────────────────────────────
-
-@app.get("/auth/login")
-def login():
-    scope = " ".join([
-        "streaming", "user-read-email", "user-read-private",
-        "user-modify-playback-state", "user-read-playback-state",
-        "user-read-currently-playing", "app-remote-control",
-        "playlist-read-private",
-    ])
-    params = urlencode({
-        "response_type": "code",
-        "client_id": CLIENT_ID,
-        "scope": scope,
-        "redirect_uri": REDIRECT_URI,
-        "state": secrets.token_urlsafe(8),
-        "show_dialog": "true",
-    })
-    return RedirectResponse(f"https://accounts.spotify.com/authorize?{params}")
-
-
-@app.get("/auth/callback")
-async def callback(
-    code: str = Query(None),
-    state: str = Query(None),
-    error: str = Query(None),
-):
-    global latest_token, latest_refresh_token
-    if error:
-        return RedirectResponse(f"{FRONTEND_URLS[0]}/#error={error}")
-    if not code:
-        return RedirectResponse(f"{FRONTEND_URLS[0]}/#error=missing_code")
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            "https://accounts.spotify.com/api/token",
-            data={
-                "code": code,
-                "redirect_uri": REDIRECT_URI,
-                "grant_type": "authorization_code",
-            },
-            headers={
-                "Authorization": get_basic_auth(),
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-        )
-
-    if resp.status_code != 200:
-        return RedirectResponse(f"{FRONTEND_URLS[0]}/#error=token_exchange_failed")
-
-    body = resp.json()
-    latest_token = body.get("access_token")
-    latest_refresh_token = body.get("refresh_token")
-
-    if not latest_refresh_token:
-        # Force re-consent to get a refresh token
-        return RedirectResponse("/auth/login")
-
-    return RedirectResponse(f"{FRONTEND_URLS[0]}/#access_token={latest_token}")
-
-
-# ── Playlist routes ───────────────────────────────────────────────────────────
-
-@app.get("/api/playlist/{playlist_id}")
-async def get_spotify_playlist(
-    playlist_id: str,
-    count: int = Query(3, ge=1, le=20),
-    exclude: str = Query(""),
-):
-    exclude_ids = {e.strip() for e in exclude.split(",") if e.strip()} if exclude else set()
-    now = datetime.utcnow()
-    cached = playlist_cache.get(playlist_id)
-
-    if cached and now < cached["expires_at"]:
-        raw_items = cached["tracks"]
-    else:
-        try:
-            raw_items = await fetch_all_spotify_tracks(playlist_id)
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 401:
-                await refresh_access_token()
-                raw_items = await fetch_all_spotify_tracks(playlist_id)
-            else:
-                raise HTTPException(status_code=502, detail="Failed to fetch Spotify playlist")
-        except Exception as e:
-            raise HTTPException(status_code=502, detail=f"Failed to fetch playlist: {e}")
-        playlist_cache[playlist_id] = {"tracks": raw_items, "expires_at": now + CACHE_TTL}
-
-    normalized = [t for item in raw_items if (t := normalize_spotify_track(item)) is not None]
-    available = [t for t in normalized if t["id"] not in exclude_ids and t["uri"] not in exclude_ids]
-    return {"tracks": fisher_yates_shuffle(available)[:count]}
+    return all_items[:MAX_PLAYLIST_ITEMS]
 
 
 async def get_youtube_tracks(playlist_id: str) -> list:
@@ -283,17 +175,23 @@ async def get_youtube_tracks(playlist_id: str) -> list:
         raw_items = cached["tracks"]
     else:
         raw_items = await fetch_all_yt_items(playlist_id)
+        for key in [k for k, v in yt_playlist_cache.items() if now >= v["expires_at"]]:
+            del yt_playlist_cache[key]
+        yt_playlist_cache.pop(playlist_id, None)
         yt_playlist_cache[playlist_id] = {"tracks": raw_items, "expires_at": now + CACHE_TTL}
+        while len(yt_playlist_cache) > CACHE_MAX_PLAYLISTS:
+            yt_playlist_cache.popitem(last=False)
 
     return [t for item in raw_items if (t := normalize_yt_track(item)) is not None]
 
 
-@app.get("/api/youtube-playlist/{playlist_id}")
+@app.get("/api/youtube-playlist/{playlist_id}", dependencies=[rate_limit("playlist")])
 async def get_youtube_playlist(
     playlist_id: str,
     count: int = Query(3, ge=1, le=20),
     exclude: str = Query(""),
 ):
+    check_playlist_id(playlist_id)
     exclude_ids = {e.strip() for e in exclude.split(",") if e.strip()} if exclude else set()
     normalized = await get_youtube_tracks(playlist_id)
     available = [t for t in normalized if t["id"] not in exclude_ids]
@@ -301,8 +199,7 @@ async def get_youtube_playlist(
 
 
 # ── Online rooms ─────────────────────────────────────────────────────────────
-# See rooms.py. YouTube playlists only: Spotify playback needs a Premium login
-# on every device and the backend still holds a single global Spotify session.
+# See rooms.py. YouTube playlists only.
 
 room_manager = RoomManager(load_tracks=get_youtube_tracks)
 
@@ -318,8 +215,19 @@ class JoinRoomBody(BaseModel):
     name: str = Field(min_length=1, max_length=24)
 
 
-@app.post("/api/rooms")
+def checked_name(raw: str) -> str:
+    name = clean_name(raw)
+    if not name:
+        raise HTTPException(status_code=400, detail="Enter a name.")
+    return name[:24]
+
+
+@app.post("/api/rooms", dependencies=[rate_limit("create")])
 async def create_room(body: CreateRoomBody):
+    host_name = checked_name(body.name)
+    check_playlist_id(body.playlist_id.strip())
+    if room_manager.full():
+        raise HTTPException(status_code=503, detail="The server is full right now. Try again later.")
     # Load the playlist up front so a bad link fails here, not mid-game.
     try:
         tracks = await get_youtube_tracks(body.playlist_id.strip())
@@ -330,57 +238,96 @@ async def create_room(body: CreateRoomBody):
     if len(tracks) < body.num_rounds * 2 * 3 + 2:
         raise HTTPException(status_code=400, detail="That playlist is too short for this many rounds")
     room, host = room_manager.create(
-        body.name.strip(), body.playlist_id.strip(), body.playlist_name.strip() or "custom playlist", body.num_rounds
+        host_name, body.playlist_id.strip(), body.playlist_name.strip() or "custom playlist", body.num_rounds
     )
     return {"code": room.code, "token": host.token}
 
 
-@app.get("/api/rooms/{code}")
+@app.get("/api/rooms/{code}", dependencies=[rate_limit("room")])
 def get_room(code: str):
     room = room_manager.get(code)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    host = room.members.get(room.host_id)
     return {
         "code": room.code,
-        "host": host.name if host else None,
         "status": room.status,
         "seats_open": sum(1 for s in room.seats.values() if s is None),
         "members": len(room.members),
     }
 
 
-@app.post("/api/rooms/{code}/join")
+@app.post("/api/rooms/{code}/join", dependencies=[rate_limit("room")])
 def join_room(code: str, body: JoinRoomBody):
     room = room_manager.get(code)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    member = room_manager.join(room, body.name.strip())
+    name = checked_name(body.name)
+    if room.locked:
+        raise HTTPException(status_code=403, detail="This room is locked. Ask the host to unlock it.")
+    if room.name_taken(name):
+        raise HTTPException(status_code=409, detail="Someone in this room already has that name. Pick another.")
+    member = room_manager.join(room, name)
     if not member:
         raise HTTPException(status_code=409, detail="This room is full.")
     return {"code": room.code, "token": member.token}
 
 
+def origin_allowed(origin: Optional[str]) -> bool:
+    # Browsers always send Origin on WebSocket connects; CORS doesn't cover them.
+    if origin is None:
+        return DEV
+    return origin.rstrip("/") in FRONTEND_URLS
+
+
+async def read_auth_token(ws: WebSocket) -> Optional[str]:
+    """The seat token, from the first message ({"type": "auth", "token": ...}).
+    It is not read from the URL, where proxies and logs would record it."""
+    try:
+        msg = parse_message(await asyncio.wait_for(ws.receive_text(), WS_AUTH_TIMEOUT))
+    except (asyncio.TimeoutError, ValueError, WebSocketDisconnect, RuntimeError):
+        return None
+    return msg["token"] if msg["type"] == "auth" else None
+
+
 @app.websocket("/ws/rooms/{code}")
-async def room_socket(ws: WebSocket, code: str, token: Optional[str] = None):
+async def room_socket(ws: WebSocket, code: str):
     # Accept before closing so the browser receives our close code; closing
     # during the handshake only shows up as a generic failure (1006).
     await ws.accept()
+    if not origin_allowed(ws.headers.get("origin")):
+        await ws.close(code=4403)
+        return
     room = room_manager.get(code)
     if not room:
         await ws.close(code=4404)
         return
+    token = await read_auth_token(ws)
     me = room.member_for_token(token)
     if not me:
         await ws.close(code=4401)  # not (or no longer) a member: join again
         return
     await room_manager.connect(room, ws, me)
+    limiter = RateLimiter(WS_MESSAGES_PER_SECOND, 1)
+    strikes = 0
     try:
         while True:
-            msg = await ws.receive_json()
-            if isinstance(msg, dict):
+            text = await ws.receive_text()
+            if limiter.check("conn"):
+                strikes += 1
+                if strikes >= WS_MAX_STRIKES:
+                    await ws.close(code=1008)
+                    break
+                continue
+            try:
+                msg = parse_message(text)
+            except ValueError as e:
+                await ws.send_json({"type": "error", "message": str(e)})
+                continue
+            try:
                 await room_manager.handle(room, me, msg, ws)
-    except (WebSocketDisconnect, ValueError, RuntimeError):
+            except Exception:
+                await ws.send_json({"type": "error", "message": "Something went wrong with that action."})
+    except (WebSocketDisconnect, RuntimeError):
         pass
     finally:
         await room_manager.disconnect(room, ws, me)
@@ -388,4 +335,4 @@ async def room_socket(ws: WebSocket, code: str, token: Optional[str] = None):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True, ws_max_size=WS_MAX_BYTES)

@@ -34,10 +34,10 @@ export function playlistIdFrom(text) {
   return v;
 }
 
-// Tab title, old-site style: "doo-wops! | Create Or Join A Room".
+// Tab title: just the page ("Round 5"); only the home page says "doo-wops!".
 export function setTitle(text) {
   var page = String(text || "").replace(/(^|[\s(])(\S)/g, function (m, sp, ch) { return sp + ch.toUpperCase(); });
-  document.title = page ? "doo-wops! | " + page : "doo-wops!";
+  document.title = !page || page === "Home" ? "doo-wops!" : page;
 }
 
 export async function postJson(path, body) {

@@ -51,7 +51,7 @@ export function initForms() {
     e.preventDefault();
     var name = joinForm.name.value.trim();
     var code = joinForm.code.value.trim().toUpperCase();
-    if (!name || code.length < 4) return setError("join-error", "Enter your name and the room code.");
+    if (!name || code.length !== 6) return setError("join-error", "Enter your name and the room code.");
     setError("join-error", "");
     saveName(name);
     busy(joinForm, true);
