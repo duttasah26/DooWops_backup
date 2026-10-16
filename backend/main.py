@@ -219,10 +219,8 @@ def get_room(code: str):
     room = room_manager.get(code)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
-    host = room.members.get(room.host_id)
     return {
         "code": room.code,
-        "host": host.name if host else None,
         "status": room.status,
         "seats_open": sum(1 for s in room.seats.values() if s is None),
         "members": len(room.members),
@@ -234,6 +232,8 @@ def join_room(code: str, body: JoinRoomBody):
     room = room_manager.get(code)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
+    if room.locked:
+        raise HTTPException(status_code=403, detail="This room is locked. Ask the host to unlock it.")
     member = room_manager.join(room, body.name.strip())
     if not member:
         raise HTTPException(status_code=409, detail="This room is full.")

@@ -281,13 +281,15 @@ function renderLobby(s, p1, p2) {
       "r-settings",
       '<div class="field"><div class="label">playlist</div>' + playlistPickerHtml("room-pl", st.playlist_id) + "</div>" +
         '<div class="field"><label class="label" for="room-rounds">rounds</label> <select id="room-rounds" class="txt">' + opts + "</select></div>" +
-        '<button class="btn" data-act="save-settings">Save settings</button>'
+        '<button class="btn" data-act="save-settings">Save settings</button>' +
+        '<div class="field"><label class="pick-row"><input type="checkbox" data-act="lock"' + (st.locked ? " checked" : "") + "> lock room (no new joiners)</label></div>"
     );
   } else {
     setRegion(
       "r-settings",
       '<table class="tbl plain"><tr><td class="label">playlist</td><td>' + esc(st.playlist_name) + "</td></tr>" +
-        '<tr><td class="label">rounds</td><td>' + st.num_rounds + "</td></tr></table>" +
+        '<tr><td class="label">rounds</td><td>' + st.num_rounds + "</td></tr>" +
+        (st.locked ? '<tr><td class="label">room</td><td>locked</td></tr>' : "") + "</table>" +
         '<div class="small">Only the host can change these.</div>'
     );
   }
@@ -483,6 +485,8 @@ function onClick(e) {
     if (!pl) return showFlash("Paste a YouTube playlist link for the custom playlist.", "error");
     showFlash("");
     send({ type: "settings", playlist_id: pl.id, playlist_name: pl.name, num_rounds: Number(document.getElementById("room-rounds").value) });
+  } else if (what === "lock") {
+    send({ type: "lock", locked: el.checked });
   } else if (what === "close-modal") {
     modalDismissed = true;
     setRegion("v-modal", "");
