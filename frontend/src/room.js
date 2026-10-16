@@ -300,7 +300,7 @@ function renderLobby(s, p1, p2) {
     "r-start",
     you.is_host
       ? '<img class="deco deco-center" src="/icons/equalizer.png" alt="">' +
-        '<button class="btn btn-go btn-big wide btn-ic ic-start' + (p1 && p2 ? "" : " is-off") + '" data-act="send" data-msg=\'{"type":"start"}\'>Start game</button>' +
+        '<button class="btn btn-go btn-big wide btn-ic ic-start' + (p1 && p2 ? "" : " is-off") + '" data-act="start-game">Start game</button>' +
           (p1 && p2 ? "" : '<div class="small center">needs two players in the seats</div>')
       : '<img class="deco deco-center" src="/icons/equalizer.png" alt="">' +
           "Waiting for " + esc(host ? host.name : "the host") + " to start the game."
@@ -315,7 +315,7 @@ function renderGame(s) {
   var isFinal = g.round === g.num_rounds;
   var activeName = seatName(g.active);
 
-  setTitle((myTurn ? "your turn" : activeName + " is picking") + " (round " + g.round + " of " + g.num_rounds + ")");
+  setTitle("round " + g.round);
   setRegion("g-heading", myTurn ? esc(activeName) + ", it's your turn!" : esc(activeName) + " is picking...");
   setRegion("g-round", "Round " + g.round + "/" + g.num_rounds);
   setVideo("g-video", track && track.youtube_video_id, true);
@@ -328,8 +328,7 @@ function renderGame(s) {
   var status = g.loading ? '<span class="loading"><span class="spinner"></span> getting songs</span>' : g.error ? esc(g.error) : '<span class="pips">' + pips + "</span>";
   // each player's latest pick: "sahil picked Song Name" (a blank until they've picked)
   var lastPick = function (n) {
-    var list = g.picks[String(n)];
-    var t = list[list.length - 1];
+    var t = g.picks[String(n)][g.round - 1]; // blank again at the start of each round
     return "<b>" + esc(seatName(n)) + "</b> picked " + (t ? "<i>" + esc(t.name) + "</i>" : "___");
   };
   var counts = lastPick(1) + " &nbsp;|&nbsp; " + lastPick(2);
@@ -480,6 +479,12 @@ function onClick(e) {
         setTimeout(function () { el.textContent = label; }, 1500);
       }, function () {});
     }
+  } else if (what === "start-game") {
+    if (el.classList.contains("is-off")) return;
+    // the rounds dropdown only counts once saved, so save it with the start
+    var rounds = document.getElementById("room-rounds");
+    if (rounds && Number(rounds.value) !== state.settings.num_rounds) send({ type: "settings", num_rounds: Number(rounds.value) });
+    send({ type: "start" });
   } else if (what === "save-settings") {
     var form = document.getElementById("r-settings");
     var pl = readPlaylistPicker(form, "room-pl");
