@@ -51,8 +51,7 @@ export function enterRoom(code, token) {
   saveToken(code, token);
   setRoomInUrl(code);
   show("room");
-  document.getElementById("tab-room").textContent = "Room " + code;
-  openRoom(code, token, {
+  document.getElementById("tab-room").textContent = "Room " + code;  openRoom(code, token, {
     onExit: goHome,
     onRejoin: function (c) { goSetup(c); },
   });
@@ -68,8 +67,7 @@ export function setError(id, text) {
 export function goWip(page) {
   setRoomInUrl(null);
   show("wip");
-  document.getElementById("wip-title").textContent = page;
-  setTitle(page);
+  document.getElementById("wip-title").textContent = page;  setTitle(page);
 }
 
 // Links and buttons with data-go="home|setup|wip" switch screens.

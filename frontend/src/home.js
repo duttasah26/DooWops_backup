@@ -1,5 +1,8 @@
-// Home page and sidebar bits: the date, the gif strips, the Get Started
-// photos, the update log marquee and the chatbox.
+// Home page and sidebar bits: the date, the gif strips, the columns' equaliser background,
+// the Get Started photos, the update log marquee and the chatbox.
+
+import { createEqualiser } from "./equaliser.js";
+import { onMusicChange } from "./playing.js";
 
 // Marquee strips of the little badge gifs between sections. The row is
 // written twice and scrolled by CSS, so a strip is full from the first frame
@@ -29,6 +32,13 @@ export function initHome() {
     var html = shifted.map(function (g) { return '<img src="/badges/' + g + '" alt="">'; }).join("");
     strip.innerHTML = '<div class="gifstrip-track">' + html + html + "</div>";
   });
+
+  // Background of the left, middle and right columns: black dots rising from
+  // the bottom edge (right above the footer), 8 dots tall at most. They only
+  // show while music is playing in the tab (the radio, the featured song or a
+  // room video).
+  var bgEqualiser = createEqualiser(document.getElementById("cols"), "13,13,13", 10, 2.5, 8);
+  onMusicChange(function (on) { if (on) bgEqualiser.start(); else bgEqualiser.stop(); });
 
   // Chatbox: Chattable, styled after bielzin.space's chatbox (public/css/chattable.css).
   if (window.chattable) window.chattable.initialize({ stylesheet: "/css/chattable.css" });

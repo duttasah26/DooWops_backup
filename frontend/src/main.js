@@ -4,6 +4,7 @@
 //   room.js     the live room (lobby, game, voting)
 //   home.js     date, gif strips, Get Started photos, update log, chatbox
 //   hover.js    the shapes that pop out when you hover a button
+//   equaliser.js, playing.js, corners.js  the dot equaliser, "is music playing?", the animated section corners
 //   ipod.js     doo-wops Radio
 //   util.js     shared helpers (backend calls, saved names/tokens, playlists)
 
@@ -14,10 +15,14 @@ import { initForms } from "./forms.js";
 import { initHome } from "./home.js";
 import { initHover } from "./hover.js";
 import { initIpod } from "./ipod.js";
+import { initMusicWatch } from "./playing.js";
+import { initCorners } from "./corners.js";
 
 initScreens();
 initForms();
 initHome();
+initMusicWatch();
+initCorners();
 initHover();
 initIpod();
 

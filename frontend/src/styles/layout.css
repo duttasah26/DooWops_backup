@@ -40,7 +40,7 @@
 body.in-game #left { display: none; }
 body.in-game #tabs { display: flex; }
 
-#cols { display: flex; align-items: flex-start; }
+#cols { display: flex; align-items: flex-start; position: relative; isolation: isolate; }
 #left { width: 230px; flex: none; padding-top: 8px; }
 #main { flex: 1; min-width: 0; padding: 8px; }
 #right { width: 220px; flex: none; padding-top: 8px; }

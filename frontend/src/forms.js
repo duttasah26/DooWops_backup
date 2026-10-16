@@ -1,9 +1,9 @@
 // The Create A Room and Join A Room forms on the setup screen.
 
-import {
-  PLAYLISTS, postJson, playlistPickerHtml, wirePlaylistPicker, readPlaylistPicker, loadName, saveName,
-} from "./util.js";
+import { PLAYLISTS, postJson, loadName, saveName } from "./util.js";
 import { enterRoom, setError } from "./screens.js";
+
+var DEFAULT_ROUNDS = 5;
 
 // while a form is sending: the loader in place of the button label
 function busy(form, on) {
@@ -19,24 +19,22 @@ function busy(form, on) {
 
 export function initForms() {
   var createForm = document.getElementById("create-form");
-  document.getElementById("create-playlist").innerHTML = playlistPickerHtml("create-pl", PLAYLISTS[0].id);
-  wirePlaylistPicker(createForm, "create-pl");
 
+  // a new room starts on the default playlist and rounds; the host changes
+  // them in the lobby's Room Settings
   createForm.addEventListener("submit", async function (e) {
     e.preventDefault();
     var name = createForm.name.value.trim();
-    var pl = readPlaylistPicker(createForm, "create-pl");
     if (!name) return setError("create-error", "Enter your name.");
-    if (!pl) return setError("create-error", "Paste a YouTube playlist link for the custom playlist.");
     setError("create-error", "");
     saveName(name);
     busy(createForm, true);
     try {
       var data = await postJson("/api/rooms", {
         name: name,
-        playlist_id: pl.id,
-        playlist_name: pl.name,
-        num_rounds: Number(createForm.rounds.value),
+        playlist_id: PLAYLISTS[0].id,
+        playlist_name: PLAYLISTS[0].name,
+        num_rounds: DEFAULT_ROUNDS,
       });
       enterRoom(data.code, data.token);
     } catch (err) {

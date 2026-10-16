@@ -133,8 +133,13 @@ function setVideo(id, videoId, autoplay) {
   currentVideo[id] = videoId;
   el.innerHTML = videoId
     ? '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(videoId) +
-      "?autoplay=" + (autoplay ? 1 : 0) + '&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="video"></iframe>'
+      "?enablejsapi=1&autoplay=" + (autoplay ? 1 : 0) + '&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="video"></iframe>'
     : '<div class="novideo">no video loaded</div>';
+}
+
+// just the song's title: drops a trailing "(From "Movie")" or "(feat. Artist)"
+function songTitle(name) {
+  return name.replace(/\s*[(\[]\s*(from|feat\.?|ft\.?)\b[^)\]]*[)\]]\s*$/i, "").replace(/\s+-\s+from\b.*$/i, "");
 }
 
 function trackTitle(t) {
@@ -203,15 +208,16 @@ var SKELETONS = {
     "</div>" +
     "<div>" +
     '<div class="box no-blimp"><div class="box-head">Start The Game</div><div class="box-body" id="r-start"></div></div>' +
-    '<div class="box no-blimp"><div class="box-head">How To Play</div><div class="box-body">' + HOW_TO_PLAY + "</div></div>" +
+    '<div class="box no-blimp box-fold"><div class="box-head">How To Play</div><div class="box-body">' + HOW_TO_PLAY + "</div></div>" +
     "</div>" +
     "</div>",
 
   game:
-    '<div class="room-head"><h2 class="h" id="g-heading"></h2><span class="room-head-right"><b id="g-round"></b>' + LEAVE + "</span></div>" +
+    '<div class="room-head"><h2 class="h" id="g-heading"></h2><span class="room-head-right"><b id="g-round"></b></span></div>' +
     '<div class="box no-blimp"><div class="video" id="g-video"></div></div>' +
     '<div class="box no-blimp"><div class="box-body" id="g-controls"></div></div>' +
-    '<div class="box no-blimp"><div class="box-head">In The Audience</div><div id="g-people"></div></div>',
+    '<div class="box no-blimp"><div class="box-head">In The Audience</div><div id="g-people"></div></div>' +
+    '<div class="leave-row">' + LEAVE + "</div>",
 
   votes:
     '<div class="room-head"><h2 class="h" id="v-heading"></h2>' + LEAVE + "</div>" +
@@ -326,12 +332,14 @@ function renderGame(s) {
     pips += '<span class="pip' + (i < g.index ? " heard" : i === g.index ? " now" : "") + '">' + (i + 1) + "</span>";
   }
   var status = g.loading ? '<span class="loading"><span class="spinner"></span> getting songs</span>' : g.error ? esc(g.error) : '<span class="pips">' + pips + "</span>";
-  // each player's latest pick: "sahil picked Song Name" (a blank until they've picked)
+  // each player's latest pick as a tag: a black name plate, then just the song
+  // title on lime (a greyed "waiting" until they've picked)
   var lastPick = function (n) {
     var t = g.picks[String(n)][g.round - 1]; // blank again at the start of each round
-    return "<b>" + esc(seatName(n)) + "</b> picked " + (t ? "<i>" + esc(t.name) + "</i>" : "___");
+    return '<span class="pk"><b class="pk-name">' + esc(seatName(n)) + "</b>" +
+      (t ? '<span class="pk-song">' + esc(songTitle(t.name)) + "</span>" : '<span class="pk-song pk-empty">waiting</span>') + "</span>";
   };
-  var counts = lastPick(1) + " &nbsp;|&nbsp; " + lastPick(2);
+  var counts = '<span class="pickline">' + lastPick(1) + lastPick(2) + "</span>";
 
   var controls;
   if (myTurn && !g.loading) {

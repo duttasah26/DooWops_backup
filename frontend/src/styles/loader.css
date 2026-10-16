@@ -8,6 +8,9 @@
   animation: thump .5s infinite;
 }
 .spinner-big { width: 36px; height: 36px; }
+/* inside a button (Create / Join room while sending): same height as the label,
+   so the button doesn't grow */
+.btn .spinner { width: 15px; height: 15px; vertical-align: top; }
 .loading { display: flex; align-items: center; gap: 8px; color: #555; }
 
 /* the speaker thump, also used by the update log icons */

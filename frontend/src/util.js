@@ -3,11 +3,12 @@
 export var BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || "http://localhost:5000").replace(/\/$/, "");
 export var WS_URL = BACKEND_URL.replace(/^http/, "ws");
 
-// Preset playlists. The first one is the default everywhere.
+// Preset playlists. The first one is the default everywhere. img is the
+// 225x30 badge GIF for the picker (public/stations).
 export var PLAYLISTS = [
-  { id: "PLRQOvzGsQlU-cwJQeuaze-1al0_ESZDbT", name: "9X FM" },
-  { id: "PLRQOvzGsQlU8yJkFOEjvcaH4XtkAVZ8ZO", name: "100.2 Sangeet Bangla FM" },
-  { id: "PLRQOvzGsQlU81y8I5LepPVjmfLxYS1AIL", name: "106.2 AMAR FM" },
+  { id: "PLRQOvzGsQlU-cwJQeuaze-1al0_ESZDbT", name: "9X FM", img: "9xfm" },
+  { id: "PLRQOvzGsQlU8yJkFOEjvcaH4XtkAVZ8ZO", name: "100.2 Sangeet Bangla FM", img: "sangeet-bangla" },
+  { id: "PLRQOvzGsQlU81y8I5LepPVjmfLxYS1AIL", name: "106.2 AMAR FM", img: "amar-fm" },
 ];
 
 // Escape text before it goes into innerHTML. Names and song titles come from
@@ -60,21 +61,23 @@ export async function postJson(path, body) {
   return data;
 }
 
-// The playlist picker: one radio per preset, plus "custom" with a URL box.
-// Used on the create-room form and in the host's room settings.
+// The playlist picker: one badge button per preset (a radio under the hood),
+// plus "custom" with a URL box. Used on the create-room form and in the
+// host's room settings.
 export function playlistPickerHtml(name, currentId) {
   var preset = PLAYLISTS.some(function (p) { return p.id === currentId; });
   var rows = PLAYLISTS.map(function (p) {
     return (
-      '<label class="pick-row"><input type="radio" name="' + name + '" value="' + p.id + '"' +
-      (p.id === currentId ? " checked" : "") + "> " + esc(p.name) + "</label>"
+      '<label class="pick-btn"><input type="radio" name="' + name + '" value="' + p.id + '"' +
+      (p.id === currentId ? " checked" : "") + '><img src="/stations/' + p.img + '.gif" alt="' + esc(p.name) +
+      '" title="' + esc(p.name) + '"></label>'
     );
   }).join("");
   var custom = !preset && currentId;
   return (
     rows +
-    '<label class="pick-row"><input type="radio" name="' + name + '" value="custom"' + (custom ? " checked" : "") +
-    "> custom playlist</label>" +
+    '<label class="pick-btn"><input type="radio" name="' + name + '" value="custom"' + (custom ? " checked" : "") +
+    '><span class="pick-btn-text">custom playlist</span></label>' +
     '<div class="pick-custom"' + (custom ? "" : " hidden") + '>' +
     '<input class="txt wide" name="' + name + '-url" placeholder="paste a YouTube playlist link" value="' +
     (custom ? esc(currentId) : "") + '">' +
