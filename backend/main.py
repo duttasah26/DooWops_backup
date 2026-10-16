@@ -73,15 +73,31 @@ async def lifespan(_app: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="DooWops API", lifespan=lifespan)
+# The interactive docs are only served when DOOWOPS_ENV=dev.
+app = FastAPI(
+    title="DooWops API",
+    lifespan=lifespan,
+    docs_url="/docs" if DEV else None,
+    redoc_url="/redoc" if DEV else None,
+    openapi_url="/openapi.json" if DEV else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=FRONTEND_URLS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,  # no cookies are used
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 def fisher_yates_shuffle(lst: list) -> list:
