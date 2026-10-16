@@ -7,5 +7,24 @@
 .txt.code { width: 110px; text-transform: uppercase; letter-spacing: 3px; font-weight: bold; }
 .txt.invite { width: 58%; min-width: 180px; font-size: 12px; }
 
-.pick-row { display: block; padding: 2px 0; cursor: pointer; }
-.pick-custom { margin: 2px 0 0 20px; }
+/* the Create / Join room forms on the setup screen are bigger than the small
+   forms inside a room: larger labels, fields and buttons, more room around them */
+#screen-setup .box-body { padding: 12px 14px; }
+#screen-setup .field { margin: 0 0 12px; }
+#screen-setup .label { font-size: 13px; margin-bottom: 3px; }
+#screen-setup .txt { font-size: 15px; padding: 6px 8px; }
+#screen-setup .txt.code { width: 130px; }
+#screen-setup .btn-big { font-size: 14px; padding: 8px 20px; }
+
+/* playlist picker: each option is a 225x30 badge GIF shown as is (the logo
+   keeps its own look, only the station name is baked crunchy). The radio is
+   hidden; the chosen one is lit lime. */
+.pick-btn { display: block; position: relative; width: 225px; height: 30px; margin: 0 0 4px; cursor: pointer; }
+.pick-btn input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pick-btn img, .pick-btn-text { display: block; width: 225px; height: 30px; opacity: .75; }
+.pick-btn-text { display: flex; align-items: center; justify-content: center; border: 1px solid #0d0d0d; background: #e6e6e6; color: #333; font: bold 12px Verdana, Geneva, Tahoma, sans-serif; }
+.pick-btn:hover img, .pick-btn:hover .pick-btn-text, .pick-btn input:checked + img, .pick-btn input:checked + .pick-btn-text { opacity: 1; }
+.pick-btn input:checked + img, .pick-btn input:checked + .pick-btn-text { outline: 2px solid #b5d333; outline-offset: 1px; box-shadow: 0 0 6px rgba(181,211,51,.9); }
+.pick-btn input:checked + .pick-btn-text { background: linear-gradient(#eaf7b0 0%, #cfe57a 49%, #b5d333 50%, #93b51c 100%); color: #0d0d0d; }
+.pick-btn input:focus-visible + img, .pick-btn input:focus-visible + .pick-btn-text { outline: 2px dashed #0d0d0d; outline-offset: 1px; }
+.pick-custom { margin: 2px 0 0; }

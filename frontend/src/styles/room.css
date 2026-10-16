@@ -10,6 +10,15 @@
 .pip.heard { background: #2b2d28; color: #b5d333; }
 .pip.now { background: #b5d333; color: #0d0d0d; box-shadow: 0 0 4px rgba(181,211,51,.9); }
 
+/* "sahil | Hey Shona": each player's latest pick, a black name plate and the
+   song title on lime (grey while they haven't picked) */
+.pickline { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.pk { display: inline-flex; border: 1px solid #0d0d0d; font-size: 12px; line-height: 16px; }
+.pk-name { background: #0d0d0d; color: #b5d333; padding: 1px 7px; }
+.pk-song { max-width: 190px; padding: 1px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: bold; color: #0d0d0d; background: linear-gradient(#eaf7b0 0%, #cfe57a 49%, #b5d333 50%, #93b51c 100%); }
+.pk-empty { font-weight: normal; color: #888; background: #e6e6e6; }
+.leave-row { margin: 8px 0 0; }
+
 /* ── tables ─────────────────────────────────────────────────────────────── */
 
 .tbl { width: 100%; border-collapse: collapse; }

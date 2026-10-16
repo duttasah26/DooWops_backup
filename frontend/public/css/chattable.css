@@ -6,7 +6,11 @@ body {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-size: 12px;
 }
-#background, #settingsMenu {
+#background {
+    background: #0d0d0d;
+}
+/* the settings menu keeps its light background so its dark text stays readable */
+#settingsMenu {
     background: url(/media/grid.png);
     background-size: 100px 100px;
     background-attachment: local;

@@ -1,5 +1,5 @@
-/* ── buttons: winamp.com-style glossy buttons, the faded icon behind the label,
-   and the shapes that pop out on hover (hover.js) ── */
+/* ── buttons: winamp.com-style glossy buttons, the dot equaliser on hover, and
+   the shapes that pop out on click (hover.js) ── */
 
 /* soft, slightly blurry button text: a 1px blur in the text colour plus a faint halo */
 .btn { text-shadow: 0 0 1px currentColor, 0 0 6px rgba(255,255,255,.6); }
@@ -45,25 +45,17 @@
 .yt-link img { height: 22px; width: auto; display: block; }
 .yt-link:hover img { opacity: .85; }
 .btn.wide { display: block; width: 100%; text-align: center; }
-/* a doo-wops icon faded into the button behind its label */
-.btn-ic { position: relative; isolation: isolate; overflow: hidden; }
-.btn-ic::before {
-  content: ""; position: absolute; z-index: -1;
-  right: -6px; top: 50%; width: 64px; height: 64px; transform: translateY(-50%);
-  background: center / contain no-repeat;
-  opacity: .22;
-}
-.btn.wide.btn-ic::before { width: 90px; height: 90px; right: 4px; }
-.ic-create::before { background-image: url("/icons/stars-speakers.png"); }
-.ic-join::before { background-image: url("/icons/dots-rings.png"); }
-.ic-start::before { background-image: url("/icons/speakers-wide.png"); }
-.ic-pick::before { background-image: url("/icons/equalizer-star.png"); }
+.btn { position: relative; isolation: isolate; }
+/* dot equaliser (equaliser.js): the three columns keep it on as their background, a
+   button turns it on behind its text while hovered */
+.eq { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.eq.on { opacity: 1; }
 /* Leave room: no hover effects at all (no sparks either, see hover.js) */
 .btn-red.no-fx:hover { color: #fff; text-shadow: 0 0 1px currentColor, 0 0 6px rgba(255,255,255,.6); background: linear-gradient(#ee6a63 0%, #d6312a 49%, #b50000 50%, #8c0000 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
 .btn-row { display: flex; flex-wrap: nowrap; gap: 6px; }
 .btn-row .btn { margin: 0; }
 
-/* hover sparks around buttons */
+/* click sparks around buttons */
 .spark { position: absolute; z-index: 70; pointer-events: none; height: auto; animation: spark 1s ease-out forwards; filter: drop-shadow(0 0 1px #0d0d0d) drop-shadow(0 0 3px rgba(181,211,51,.8)); }
 /* black sparks: brightness(0) turns the lime stars black too */
 .spark-x { filter: drop-shadow(0 0 1px #fff); }

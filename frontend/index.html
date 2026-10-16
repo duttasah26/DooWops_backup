@@ -61,7 +61,6 @@
       <div class="news">
         <div class="news-list">
           <div class="news-item">
-            <img src="/icons/speaker-cone.png" alt="">
             <div>
               <div class="news-date">09.10 <span class="news-new">NEW!</span></div>
               <a class="news-title" href="#radio">A Fresh New Look</a>
@@ -71,7 +70,6 @@
             </div>
           </div>
           <div class="news-item">
-            <img src="/icons/speaker-cone.png" alt="">
             <div>
               <div class="news-date">08.10</div>
               <a class="news-title" href="/" data-go="setup">Play Online With Friends</a>
@@ -81,7 +79,6 @@
             </div>
           </div>
           <div class="news-item">
-            <img src="/icons/speaker-cone.png" alt="">
             <div>
               <div class="news-date">31.07</div>
               <a class="news-title" href="#chat">Chat + Featured Song</a>
@@ -90,7 +87,6 @@
             </div>
           </div>
           <div class="news-item">
-            <img src="/icons/speaker-cone.png" alt="">
             <div>
               <div class="news-date">19.07</div>
               <a class="news-title" href="/" data-go="setup">YouTube Playlists</a>
@@ -98,7 +94,6 @@
             </div>
           </div>
           <div class="news-item">
-            <img src="/icons/speaker-cone.png" alt="">
             <div>
               <div class="news-date">05.07</div>
               <span class="news-title">doo-wops Is Live!</span>
@@ -118,10 +113,9 @@
     <div id="main">
 
       <div id="screen-home">
-        <div class="box">
+        <div class="box box-fold">
           <div class="box-head">Welcome To doo-wops!</div>
           <div class="box-body">
-            <img class="deco deco-right" src="/icons/speakers-rings.png" alt="">
             <p>doo-wops is a 1v1 song game. Two players take turns picking songs from a playlist,
             and whoever's watching votes for the best picks at the end. Make a room, send your
             friends the link, and play from your own computers.</p>
@@ -134,14 +128,14 @@
 
         <div class="gifstrip"></div>
 
-        <div class="box" id="featured">
+        <div class="box box-fold" id="featured">
           <div class="box-head">Featured Song <a class="yt-link" href="https://www.youtube.com/watch?v=lTALe90M_rI" target="_blank" rel="noreferrer" title="watch on YouTube"><img src="/icons/youtube.svg" alt="YouTube"></a></div>
-          <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/lTALe90M_rI" title="featured song" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+          <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/lTALe90M_rI?enablejsapi=1" title="featured song" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
         </div>
 
         <div class="gifstrip"></div>
 
-        <div class="box" id="radio">
+        <div class="box box-fold" id="radio">
           <div class="box-head">doo-wops Radio</div>
           <div class="box-body radio">
             <!-- doo-wops Radio: an iPod, after the theme in /RADIO (ipod.js draws
@@ -186,50 +180,38 @@
 
       <div id="screen-setup" hidden>
         <div class="gifstrip"></div>
-        <div class="cols2">
-          <div>
-            <form class="box" id="create-form">
-              <div class="box-head">Create A Room</div>
-              <div class="box-body">
-                <label class="field"><span class="label">your name</span>
-                  <input class="txt wide" name="name" maxlength="24" autocomplete="off"></label>
-                <div class="field"><span class="label">playlist</span><div id="create-playlist"></div></div>
-                <label class="field"><span class="label">rounds</span>
-                  <select class="txt" name="rounds">
-                    <option>2</option><option>3</option><option>4</option><option selected>5</option>
-                    <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
-                  </select></label>
-                <p class="error" id="create-error" hidden></p>
-                <button class="btn btn-go btn-big btn-ic ic-create" type="submit">Create room</button>
-                <img class="deco deco-corner" src="/icons/star-speakers.png" alt="">
-              </div>
-            </form>
-          </div>
-          <div>
-            <form class="box" id="join-form">
-              <div class="box-head">Join A Room</div>
-              <div class="box-body">
-                <label class="field"><span class="label">your name</span>
-                  <input class="txt wide" name="name" maxlength="24" autocomplete="off"></label>
-                <label class="field"><span class="label">room code</span>
-                  <input class="txt code" name="code" maxlength="6" autocomplete="off"></label>
-                <p class="error" id="join-error" hidden></p>
-                <button class="btn btn-go btn-big btn-ic ic-join" type="submit">Join room</button>
-                <img class="deco deco-corner" src="/icons/speakers-pair.png" alt="">
-              </div>
-            </form>
-            <div class="box no-blimp">
-              <div class="box-head">How To Play</div>
-              <div class="box-body">
-                <ol class="steps">
-                  <li>The host makes a room and sends the invite link.</li>
-                  <li>Two people sit in the player seats. Everyone else watches.</li>
-                  <li>Each round, players take turns: listen through 3 songs and keep one. The last round has 5.</li>
-                  <li>At the end the watchers hand out +1s to the picks they liked (no watchers? the host does).</li>
-                  <li>The host hits Finish and the winner is announced.</li>
-                </ol>
-              </div>
+        <div class="cols2 even">
+          <form class="box" id="create-form">
+            <div class="box-head">Create A Room</div>
+            <div class="box-body">
+              <label class="field"><span class="label">your name</span>
+                <input class="txt wide" name="name" maxlength="24" autocomplete="off"></label>
+              <p class="error" id="create-error" hidden></p>
+              <button class="btn btn-go btn-big btn-ic ic-create" type="submit">Create room</button>
             </div>
+          </form>
+          <form class="box" id="join-form">
+            <div class="box-head">Join A Room</div>
+            <div class="box-body">
+              <label class="field"><span class="label">your name</span>
+                <input class="txt wide" name="name" maxlength="24" autocomplete="off"></label>
+              <label class="field"><span class="label">room code</span>
+                <input class="txt code" name="code" maxlength="6" autocomplete="off"></label>
+              <p class="error" id="join-error" hidden></p>
+              <button class="btn btn-go btn-big btn-ic ic-join" type="submit">Join room</button>
+            </div>
+          </form>
+        </div>
+        <div class="box no-blimp box-fold">
+          <div class="box-head">How To Play</div>
+          <div class="box-body">
+            <ol class="steps">
+              <li>The host makes a room and sends the invite link.</li>
+              <li>Two people sit in the player seats. Everyone else watches.</li>
+              <li>Each round, players take turns: listen through 3 songs and keep one. The last round has 5.</li>
+              <li>At the end the watchers hand out +1s to the picks they liked (no watchers? the host does).</li>
+              <li>The host hits Finish and the winner is announced.</li>
+            </ol>
           </div>
         </div>
       </div>
@@ -239,7 +221,6 @@
           <div class="box-head" id="wip-title">Coming Soon</div>
           <div class="wip-stripe"></div>
           <div class="box-body wip">
-            <img class="deco deco-right" src="/icons/speaker-tower.png" alt="">
             <div class="wip-big">Work In Progress</div>
             <p>This page is still being built. Check back soon!</p>
             <a class="btn btn-go btn-big btn-ic ic-create" href="/" data-go="home">Back home</a>
